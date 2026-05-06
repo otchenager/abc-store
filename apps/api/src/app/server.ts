@@ -1,8 +1,8 @@
 import { createApp } from "./app.js";
-import { env } from "../config/env.js";
 
 const app = createApp();
+const port = Number(process.env.PORT ?? 4000);
 
-app.listen(env.PORT, () => {
-  console.log(`API server started on http://localhost:${env.PORT}`);
+app.listen(port, () => {
+  console.log(`API is running on http://localhost:${port}`);
 });
