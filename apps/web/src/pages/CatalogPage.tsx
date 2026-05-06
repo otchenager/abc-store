@@ -334,11 +334,12 @@ function FilterSidebar({ filters, activeFilters, onChange }: {
   onChange: (updates: Partial<ProductFilters>) => void;
 }) {
   const totalCount = filters.categories.reduce((s, c) => s + c.count, 0);
+  const toUsd = (rub: number) => Math.round(rub / USD_TO_RUB);
   const PRICE_RANGES = [
-    { label: "До 15 000 ₽", min: 0, max: 200 },
-    { label: "15 000 – 60 000 ₽", min: 200, max: 800 },
-    { label: "60 000 – 100 000 ₽", min: 800, max: 1333 },
-    { label: "Свыше 100 000 ₽", min: 1333, max: 99999 },
+    { label: "До 15 000 ₽", min: 0, max: toUsd(15000) },
+    { label: "15 000 – 60 000 ₽", min: toUsd(15000), max: toUsd(60000) },
+    { label: "60 000 – 100 000 ₽", min: toUsd(60000), max: toUsd(100000) },
+    { label: "Свыше 100 000 ₽", min: toUsd(100000), max: 99999 },
   ];
   return (
     <aside style={{ display: "flex", flexDirection: "column", gap: 28 }}>
@@ -458,6 +459,10 @@ export function CatalogPage() {
   }, []);
 
   useEffect(() => {
+    setSearch(searchParams.get("search") ?? "");
+  }, [searchParams]);
+
+  useEffect(() => {
     setLoading(true); setError(null);
     getProducts(activeFilters)
       .then(({ data, meta }) => { setProducts(data); setMeta(meta); })
@@ -471,8 +476,7 @@ export function CatalogPage() {
     updateFilters({ search: search || undefined, page: 1 });
   };
 
-  const categoryName = filterData?.categories.find((c) => c.slug === activeFilters.category)?.slug;
-  const titleRu = categoryName ? (CATEGORY_RU[categoryName] ?? "Каталог") : "Каталог";
+  const titleRu = activeFilters.category ? (CATEGORY_RU[activeFilters.category] ?? "Каталог") : "Каталог";
 
   return (
     <>
