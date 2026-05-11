@@ -502,7 +502,7 @@ export function CatalogPage() {
         @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:.7} }
       `}</style>
 
-      <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: "'DM Sans',system-ui,sans-serif", color: "var(--text)" }}>
+      <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: "inherit", color: "var(--text)" }}>
 
         {/* Header */}
         <header style={{

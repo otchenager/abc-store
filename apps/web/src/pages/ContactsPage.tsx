@@ -14,7 +14,7 @@ export function ContactsPage() {
         a { color: inherit; text-decoration: none; }
       `}</style>
 
-      <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: "'DM Sans',system-ui,sans-serif", color: "var(--text)" }}>
+      <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: "inherit", color: "var(--text)" }}>
 
         {/* Header */}
         <header style={{
