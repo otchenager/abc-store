@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import {
   getProducts,
   getProductFilters,
+  postOrder,
   type ProductWithRelations,
   type ProductsResponse,
   type FiltersResponse,
@@ -144,10 +145,23 @@ function OrderModal({
     e.preventDefault();
     if (!name.trim() || !phone.trim()) { setError("Заполните имя и телефон"); return; }
     setSending(true); setError("");
-    // Имитируем отправку — можно подключить реальный endpoint позже
-    await new Promise((r) => setTimeout(r, 1000));
-    setSending(false);
-    onSuccess();
+    try {
+      await postOrder({
+        customerName: name.trim(),
+        customerPhone: phone.trim(),
+        comment: comment.trim() || undefined,
+        items: cart.map((i) => ({
+          productId: i.product.id,
+          quantity: i.qty,
+          price: i.product.price,
+        })),
+      });
+      setSending(false);
+      onSuccess();
+    } catch {
+      setSending(false);
+      setError("Не удалось отправить заказ. Попробуйте снова или напишите в Telegram.");
+    }
   };
 
   return (
