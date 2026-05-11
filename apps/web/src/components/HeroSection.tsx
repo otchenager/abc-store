@@ -220,7 +220,7 @@ export default function HeroSection() {
             </div>
           )}
           <Canvas
-            camera={{ position: [0, 0, 14], fov: 42 }}
+            camera={{ position: [0, 0, 5], fov: 42 }}
             style={{ width: '100%', height: '100%', background: 'transparent' }}
             gl={{ alpha: true, antialias: true }}
           >
