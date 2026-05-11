@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo, Suspense } from 'react'
+import { useEffect, useRef, useMemo, useState, Suspense } from 'react'
 import { Link } from 'react-router-dom'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useGLTF, Environment } from '@react-three/drei'
@@ -68,13 +68,12 @@ function makeScreenTexture(): THREE.CanvasTexture {
 }
 
 // ─── iPhone 3D Model ─────────────────────────────────────────────────────────
-function IPhoneModel() {
+function IPhoneModel({ onLoaded }: { onLoaded: () => void }) {
   const { scene } = useGLTF('/models/iphone_17_pro_max.glb')
   const groupRef = useRef<THREE.Group>(null)
   const screenTex = useMemo(() => makeScreenTexture(), [])
 
   useEffect(() => {
-    // Apply custom screen texture to all display meshes
     scene.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         const name: string = child.material?.name || ''
@@ -94,7 +93,8 @@ function IPhoneModel() {
         }
       }
     })
-  }, [scene])
+    onLoaded()
+  }, [scene, onLoaded])
 
   // Floating + slow rotation animation
   useFrame(({ clock }) => {
@@ -113,6 +113,7 @@ function IPhoneModel() {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function HeroSection() {
+  const [modelLoaded, setModelLoaded] = useState(false)
   return (
     <>
       <style>{CSS}</style>
@@ -194,6 +195,21 @@ export default function HeroSection() {
           height: '100%',
           zIndex: 2,
         }}>
+          {!modelLoaded && (
+            <div style={{
+              position: 'absolute', inset: 0, zIndex: 1,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              pointerEvents: 'none',
+            }}>
+              <div style={{
+                width: 48, height: 48, borderRadius: '50%',
+                border: '2px solid rgba(100,66,255,0.15)',
+                borderTop: '2px solid rgba(100,66,255,0.7)',
+                animation: 'spin 1s linear infinite',
+              }} />
+              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            </div>
+          )}
           <Canvas
             camera={{ position: [0, 0, 5], fov: 35 }}
             style={{ width: '100%', height: '100%', background: 'transparent' }}
@@ -204,13 +220,8 @@ export default function HeroSection() {
             <directionalLight position={[-4, 2, 2]} intensity={1.2} color="#4466ff" />
             <directionalLight position={[0, -3, -5]} intensity={1.8} color="#ffffff" />
             <pointLight position={[-2, 2, 3]} intensity={3} color="#7755ff" />
-            <Suspense fallback={
-              <mesh>
-                <boxGeometry args={[1.2, 2.4, 0.12]} />
-                <meshStandardMaterial color="#1a1a2e" transparent opacity={0.4} />
-              </mesh>
-            }>
-              <IPhoneModel />
+            <Suspense fallback={null}>
+              <IPhoneModel onLoaded={() => setModelLoaded(true)} />
               <Environment preset="city" />
             </Suspense>
           </Canvas>
