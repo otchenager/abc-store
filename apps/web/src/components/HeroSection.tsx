@@ -109,11 +109,11 @@ function IPhoneModel({ onLoaded }: { onLoaded: () => void }) {
     if (!groupRef.current) return
     const t = clock.getElapsedTime()
     groupRef.current.rotation.y = Math.PI + 0.3 + Math.sin(t * 0.3) * 0.12
-    groupRef.current.position.y = -1.0 + Math.sin(t * 0.7) * 0.04
+    groupRef.current.position.y = Math.sin(t * 0.7) * 0.06
   })
 
   return (
-    <group ref={groupRef} position={[0, -1.0, 0]} rotation={[0.1, Math.PI + 0.3, 0.05]} scale={0.18}>
+    <group ref={groupRef} position={[0, 0, 0]} rotation={[0.08, Math.PI + 0.3, 0.05]} scale={0.22}>
       <primitive object={scene} />
     </group>
   )
@@ -199,7 +199,7 @@ export default function HeroSection() {
         <div style={{
           position: 'absolute',
           top: 0, right: 0,
-          width: '55%',
+          width: '50%',
           height: '100%',
           zIndex: 2,
         }}>
@@ -220,7 +220,7 @@ export default function HeroSection() {
             </div>
           )}
           <Canvas
-            camera={{ position: [0, 0, 5], fov: 35 }}
+            camera={{ position: [0, 0, 5], fov: 42 }}
             style={{ width: '100%', height: '100%', background: 'transparent' }}
             gl={{ alpha: true, antialias: true }}
           >
