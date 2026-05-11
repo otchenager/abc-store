@@ -1,618 +1,257 @@
-import { useEffect, useRef } from 'react'
-import * as THREE from 'three'
+// ─── Stars (stable, no re-randomise on render) ───────────────────────────────
+const STARS = Array.from({ length: 70 }, (_, i) => ({
+  id: i,
+  size: Math.random() * 2 + 0.6,
+  top: Math.random() * 100,
+  left: Math.random() * 100,
+  opacity: Math.random() * 0.5 + 0.08,
+  anim: `twinkle ${(Math.random() * 4 + 2).toFixed(1)}s ease-in-out infinite ${(Math.random() * 3).toFixed(1)}s`,
+}))
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface ProductModel {
-  name: string
-  build: (scene: THREE.Scene) => THREE.Group
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t
-
-function roundedBoxGeometry(w: number, h: number, d: number, r: number, segs = 3) {
-  const geo = new THREE.BoxGeometry(w, h, d, segs, segs, segs)
-  const pos = geo.attributes.position
-  const v = new THREE.Vector3()
-  for (let i = 0; i < pos.count; i++) {
-    v.fromBufferAttribute(pos, i)
-    v.x = Math.sign(v.x) * Math.min(Math.abs(v.x), w / 2 - r) + Math.sign(v.x) * r * (Math.abs(v.x) > w / 2 - r * 2 ? 1 : 0)
-    v.y = Math.sign(v.y) * Math.min(Math.abs(v.y), h / 2 - r) + Math.sign(v.y) * r * (Math.abs(v.y) > h / 2 - r * 2 ? 1 : 0)
-    v.z = Math.sign(v.z) * Math.min(Math.abs(v.z), d / 2 - r) + Math.sign(v.z) * r * (Math.abs(v.z) > d / 2 - r * 2 ? 1 : 0)
-    pos.setXYZ(i, v.x, v.y, v.z)
-  }
-  geo.computeVertexNormals()
-  return geo
-}
-
-// ─── Material presets ─────────────────────────────────────────────────────────
-
-const matPhone = () => new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.9, roughness: 0.15 })
-const matGlass = () => new THREE.MeshStandardMaterial({ color: 0x88aacc, metalness: 0.1, roughness: 0.05, transparent: true, opacity: 0.35 })
-const matScreen = () => new THREE.MeshStandardMaterial({ color: 0x050510, metalness: 0.0, roughness: 0.6, emissive: 0x1133ff, emissiveIntensity: 0.15 })
-const matAluminium = () => new THREE.MeshStandardMaterial({ color: 0xd4d0c8, metalness: 0.8, roughness: 0.25 })
-const matRubber = () => new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.0, roughness: 0.9 })
-const matLens = () => new THREE.MeshStandardMaterial({ color: 0x334455, metalness: 0.05, roughness: 0.05, transparent: true, opacity: 0.7 })
-const matSilicone = () => new THREE.MeshStandardMaterial({ color: 0x1a1a22, metalness: 0.0, roughness: 0.85 })
-const matSensor = () => new THREE.MeshStandardMaterial({ color: 0x0d1117, metalness: 0.7, roughness: 0.2, emissive: 0x00ff88, emissiveIntensity: 0.1 })
-
-// ─── Product builders ─────────────────────────────────────────────────────────
-
-function buildIPhone(): THREE.Group {
-  const g = new THREE.Group()
-
-  // Body
-  const body = new THREE.Mesh(roundedBoxGeometry(0.75, 1.55, 0.08, 0.05), matPhone())
-  g.add(body)
-
-  // Screen bezel inset
-  const screenBg = new THREE.Mesh(new THREE.PlaneGeometry(0.66, 1.42), matScreen())
-  screenBg.position.set(0, 0.01, 0.042)
-  g.add(screenBg)
-
-  // Glass front
-  const glass = new THREE.Mesh(roundedBoxGeometry(0.74, 1.54, 0.005, 0.045), matGlass())
-  glass.position.set(0, 0, 0.042)
-  g.add(glass)
-
-  // Triple camera island
-  const islandBase = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.32, 0.02), matPhone())
-  islandBase.position.set(-0.16, 0.52, 0.055)
-  g.add(islandBase)
-
-  for (let i = 0; i < 3; i++) {
-    const cx = i % 2 === 0 ? -0.06 : 0.06
-    const cy = i < 2 ? 0.06 : -0.06
-    const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.015, 24), matLens())
-    lens.rotation.x = Math.PI / 2
-    lens.position.set(-0.16 + cx, 0.52 + cy, 0.068)
-    g.add(lens)
-    const lensRing = new THREE.Mesh(new THREE.TorusGeometry(0.048, 0.006, 12, 24), matPhone())
-    lensRing.position.copy(lens.position)
-    lensRing.rotation.x = Math.PI / 2
-    g.add(lensRing)
-  }
-
-  // Dynamic Island
-  const island = new THREE.Mesh(new THREE.CapsuleGeometry(0.025, 0.08, 8, 16), matPhone())
-  island.position.set(0, 0.67, 0.043)
-  island.rotation.z = Math.PI / 2
-  g.add(island)
-
-  // Side buttons
-  const vol1 = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.08, 0.04), matPhone())
-  vol1.position.set(-0.38, 0.2, 0)
-  g.add(vol1)
-  const vol2 = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.08, 0.04), matPhone())
-  vol2.position.set(-0.38, 0.06, 0)
-  g.add(vol2)
-  const power = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.12, 0.04), matPhone())
-  power.position.set(0.38, 0.15, 0)
-  g.add(power)
-
-  return g
-}
-
-function buildRayBan(): THREE.Group {
-  const g = new THREE.Group()
-
-  // Left lens
-  const lensL = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.03, 12, 40), matRubber())
-  lensL.position.set(-0.3, 0, 0)
-  g.add(lensL)
-  const lensLFill = new THREE.Mesh(new THREE.CircleGeometry(0.19, 40), matLens())
-  lensLFill.position.set(-0.3, 0, 0.01)
-  g.add(lensLFill)
-
-  // Right lens
-  const lensR = lensL.clone()
-  lensR.position.set(0.3, 0, 0)
-  g.add(lensR)
-  const lensRFill = lensLFill.clone()
-  lensRFill.position.set(0.3, 0, 0.01)
-  g.add(lensRFill)
-
-  // Bridge
-  const bridge = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.14, 12), matRubber())
-  bridge.rotation.z = Math.PI / 2
-  bridge.position.set(0, 0.04, 0)
-  g.add(bridge)
-
-  // Left arm
-  const armL = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.025, 0.025), matRubber())
-  armL.position.set(-0.62, 0, -0.15)
-  armL.rotation.y = 0.15
-  g.add(armL)
-  // Right arm
-  const armR = armL.clone()
-  armR.position.set(0.62, 0, -0.15)
-  armR.rotation.y = -0.15
-  g.add(armR)
-
-  // Speaker grille (Ray-Ban Meta)
-  const grilleMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.3, roughness: 0.7 })
-  for (let i = 0; i < 4; i++) {
-    const dot = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.01, 8), grilleMat)
-    dot.rotation.x = Math.PI / 2
-    dot.position.set(-0.85 + i * 0.015, 0, -0.01)
-    g.add(dot)
-  }
-
-  // Nose pads
-  const noseL = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 8), matRubber())
-  noseL.position.set(-0.07, -0.09, 0.04)
-  g.add(noseL)
-  const noseR = noseL.clone()
-  noseR.position.set(0.07, -0.09, 0.04)
-  g.add(noseR)
-
-  g.scale.set(1.1, 1.1, 1.1)
-  return g
-}
-
-function buildWhoop(): THREE.Group {
-  const g = new THREE.Group()
-
-  // Band (torus-like arc segments)
-  const bandMat = matSilicone()
-  const bandOuter = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.1, 16, 80, Math.PI * 1.6), bandMat)
-  bandOuter.rotation.x = Math.PI / 2
-  bandOuter.position.set(0, 0, 0)
-  g.add(bandOuter)
-
-  // Sensor pod
-  const pod = new THREE.Mesh(roundedBoxGeometry(0.5, 0.28, 0.14, 0.04), matSilicone())
-  pod.position.set(0, -0.45, 0)
-  g.add(pod)
-
-  // Screen
-  const podScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.38, 0.16), matScreen())
-  podScreen.position.set(0, -0.45, 0.076)
-  g.add(podScreen)
-
-  // LED strip
-  const ledMat = new THREE.MeshStandardMaterial({ color: 0x00ff88, emissive: 0x00ff88, emissiveIntensity: 0.8, metalness: 0, roughness: 0.5 })
-  for (let i = 0; i < 4; i++) {
-    const led = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.01, 8), ledMat)
-    led.rotation.x = Math.PI / 2
-    led.position.set(-0.09 + i * 0.06, -0.45, 0.079)
-    g.add(led)
-  }
-
-  // Sensor bumps (bottom of pod)
-  for (let i = 0; i < 3; i++) {
-    const bump = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.02, 12), matSensor())
-    bump.rotation.x = Math.PI / 2
-    bump.position.set(-0.1 + i * 0.1, -0.45, -0.078)
-    g.add(bump)
-  }
-
-  g.scale.set(0.9, 0.9, 0.9)
-  return g
-}
-
-function buildMacBook(): THREE.Group {
-  const g = new THREE.Group()
-  const hinge = -0.05
-
-  // ── Base ──────────────────────────────────────────────────────────────────
-  const base = new THREE.Mesh(roundedBoxGeometry(1.6, 0.1, 1.1, 0.04), matAluminium())
-  base.position.set(0, hinge - 0.05, 0)
-  g.add(base)
-
-  // Trackpad
-  const trackpad = new THREE.Mesh(roundedBoxGeometry(0.6, 0.01, 0.38, 0.02), matAluminium())
-  trackpad.position.set(0, hinge, 0.18)
-  g.add(trackpad)
-  const trackpadBorder = new THREE.Mesh(roundedBoxGeometry(0.62, 0.01, 0.40, 0.02), new THREE.MeshStandardMaterial({ color: 0xb0a8a0, metalness: 0.7, roughness: 0.3 }))
-  trackpadBorder.position.set(0, hinge - 0.002, 0.18)
-  g.add(trackpadBorder)
-
-  // Keyboard keys (simplified grid)
-  const keyMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.4, roughness: 0.7 })
-  for (let row = 0; row < 4; row++) {
-    for (let col = 0; col < 12; col++) {
-      const key = new THREE.Mesh(new THREE.BoxGeometry(0.105, 0.01, 0.09), keyMat)
-      key.position.set(-0.65 + col * 0.12, hinge + 0.01, -0.12 + row * 0.105)
-      g.add(key)
-    }
-  }
-
-  // ── Lid ──────────────────────────────────────────────────────────────────
-  const lidAngle = -Math.PI * 0.42
-
-  const lid = new THREE.Group()
-
-  const lidBody = new THREE.Mesh(roundedBoxGeometry(1.6, 0.06, 1.1, 0.04), matAluminium())
-  lidBody.position.set(0, 0, 0)
-  lid.add(lidBody)
-
-  // Screen
-  const screen = new THREE.Mesh(new THREE.PlaneGeometry(1.42, 0.92), matScreen())
-  screen.position.set(0, 0.034, 0.04)
-  screen.rotation.x = -Math.PI / 2
-  lid.add(screen)
-
-  // Notch
-  const notch = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.034, 0.015), new THREE.MeshStandardMaterial({ color: 0x0a0a0a, metalness: 0, roughness: 1 }))
-  notch.position.set(0, 0.034, -0.455)
-  lid.add(notch)
-
-  // Apple logo (simplified – a circle indentation)
-  const logo = new THREE.Mesh(new THREE.CircleGeometry(0.08, 32), new THREE.MeshStandardMaterial({ color: 0xc8c4bc, metalness: 0.9, roughness: 0.1 }))
-  logo.position.set(0, -0.031, 0)
-  logo.rotation.x = Math.PI / 2
-  lid.add(logo)
-
-  lid.rotation.x = lidAngle
-  lid.position.set(0, hinge + 0.02, -0.52)
-  g.add(lid)
-
-  g.scale.set(0.75, 0.75, 0.75)
-  return g
-}
-
-// ─── Component ────────────────────────────────────────────────────────────────
+// Sketchfab embed — iPhone 17 Pro (transparent bg, dark theme, auto-spin)
+const MODEL_URL =
+  'https://sketchfab.com/models/60600f1e4ba94fc6ac592b2f72651c65/embed' +
+  '?autospin=0.25&autostart=1&preload=1&ui_theme=dark' +
+  '&ui_infos=0&ui_controls=0&ui_stop=0&ui_hint=0' +
+  '&ui_ar=0&ui_help=0&ui_settings=0&ui_vr=0' +
+  '&ui_fullscreen=0&ui_annotations=0&ui_watermark=0' +
+  '&transparent=1&dnt=1'
 
 export default function HeroSection() {
-  const canvasRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!canvasRef.current) return
-
-    // ── Scene setup ────────────────────────────────────────────────────────
-    const W = canvasRef.current.offsetWidth
-    const H = canvasRef.current.offsetHeight
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
-    renderer.setSize(W, H)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    renderer.shadowMap.enabled = true
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap
-    canvasRef.current.appendChild(renderer.domElement)
-
-    const scene = new THREE.Scene()
-
-    const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 100)
-    camera.position.set(0, 0, 6)
-
-    // ── Lighting ───────────────────────────────────────────────────────────
-    const ambient = new THREE.AmbientLight(0xffffff, 0.4)
-    scene.add(ambient)
-
-    const keyLight = new THREE.DirectionalLight(0x8899ff, 2.5)
-    keyLight.position.set(3, 5, 5)
-    scene.add(keyLight)
-
-    const fillLight = new THREE.DirectionalLight(0x4466ff, 1.2)
-    fillLight.position.set(-4, 2, 2)
-    scene.add(fillLight)
-
-    const rimLight = new THREE.DirectionalLight(0xffffff, 1.8)
-    rimLight.position.set(0, -3, -5)
-    scene.add(rimLight)
-
-    const purpleLight = new THREE.PointLight(0x7755ff, 3, 8)
-    purpleLight.position.set(-2, 2, 3)
-    scene.add(purpleLight)
-
-    // ── Products ───────────────────────────────────────────────────────────
-    const products: ProductModel[] = [
-      { name: 'iPhone 17 Pro Max', build: buildIPhone },
-      { name: 'Ray-Ban Meta', build: buildRayBan },
-      { name: 'WHOOP', build: buildWhoop },
-      { name: 'MacBook', build: buildMacBook },
-    ]
-
-    // Shuffle order
-    const shuffled = [...products].sort(() => Math.random() - 0.5)
-
-    // Build all, hide non-active
-    const groups = shuffled.map(p => {
-      const grp = p.build(scene)
-      grp.visible = false
-      scene.add(grp)
-      return grp
-    })
-
-    // Transition state
-    let current = 0
-    let next = 1
-    let phase: 'show' | 'hold' | 'swap' = 'show'
-    let phaseTimer = 0
-
-    const HOLD_TIME = 3.5   // seconds to display each model
-    const SWAP_TIME = 0.6   // fade/slide out duration
-    const SHOW_TIME = 0.8   // fade/slide in duration
-
-    // Start first model
-    groups[current].visible = true
-    groups[current].position.set(2.2, -0.3, 0)
-    groups[current].rotation.set(0.1, -0.3, 0.05)
-
-    // Target pose per product (visual sweetspot)
-    const targetPoses = [
-      { pos: new THREE.Vector3(2.0, -0.2, 0), rot: new THREE.Euler(0.12, -0.4, 0.06) },   // iPhone
-      { pos: new THREE.Vector3(2.1, 0.1, 0), rot: new THREE.Euler(0.05, -0.3, 0.02) },    // RayBan
-      { pos: new THREE.Vector3(1.9, -0.1, 0), rot: new THREE.Euler(0.1, -0.35, 0.08) },   // WHOOP
-      { pos: new THREE.Vector3(2.3, -0.4, 0), rot: new THREE.Euler(0.3, -0.5, 0.1) },     // MacBook
-    ]
-
-    // Slide-in entry position (off to the right)
-    const offScreen = new THREE.Vector3(5, -0.5, 0)
-
-    // Mouse parallax
-    let mouseX = 0
-    let mouseY = 0
-    const onMouse = (e: MouseEvent) => {
-      mouseX = (e.clientX / window.innerWidth - 0.5) * 2
-      mouseY = -(e.clientY / window.innerHeight - 0.5) * 2
-    }
-    window.addEventListener('mousemove', onMouse)
-
-    // ── Resize ─────────────────────────────────────────────────────────────
-    const onResize = () => {
-      if (!canvasRef.current) return
-      const w = canvasRef.current.offsetWidth
-      const h = canvasRef.current.offsetHeight
-      renderer.setSize(w, h)
-      camera.aspect = w / h
-      camera.updateProjectionMatrix()
-    }
-    window.addEventListener('resize', onResize)
-
-    // ── Animate ────────────────────────────────────────────────────────────
-    let lastTime = performance.now()
-    let rafId = 0
-
-    function animate() {
-      rafId = requestAnimationFrame(animate)
-      const now = performance.now()
-      const dt = Math.min((now - lastTime) / 1000, 0.05)
-      lastTime = now
-
-      phaseTimer += dt
-
-      const cur = groups[current]
-      const nxt = groups[next]
-      const tPose = targetPoses[current % targetPoses.length]
-
-      if (phase === 'show') {
-        // Slide in from right
-        const t = Math.min(phaseTimer / SHOW_TIME, 1)
-        const ease = 1 - Math.pow(1 - t, 3)
-        cur.position.lerpVectors(offScreen, tPose.pos, ease)
-        cur.rotation.x = lerp(0.5, tPose.rot.x, ease)
-        cur.rotation.y = lerp(-0.8, tPose.rot.y, ease)
-        cur.rotation.z = lerp(0.2, tPose.rot.z, ease)
-        if (t >= 1) { phase = 'hold'; phaseTimer = 0 }
-      }
-
-      else if (phase === 'hold') {
-        // Gentle float + parallax
-        const floatY = Math.sin(now * 0.001) * 0.06
-        cur.position.y = tPose.pos.y + floatY
-        cur.rotation.x = tPose.rot.x + mouseY * 0.08
-        cur.rotation.y = tPose.rot.y + mouseX * 0.06
-        if (phaseTimer >= HOLD_TIME) {
-          // Prepare next
-          nxt.visible = true
-          nxt.position.copy(offScreen)
-          phase = 'swap'
-          phaseTimer = 0
-        }
-      }
-
-      else if (phase === 'swap') {
-        // Slide current out left while next slides in from right
-        const t = Math.min(phaseTimer / SWAP_TIME, 1)
-        const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t // ease in-out
-
-        // Exit current to left
-        cur.position.x = lerp(tPose.pos.x, -5, ease)
-        cur.position.y = lerp(tPose.pos.y, tPose.pos.y - 0.3, ease)
-
-        const nPose = targetPoses[next % targetPoses.length]
-        // Enter next from right
-        nxt.position.lerpVectors(offScreen, nPose.pos, ease)
-        nxt.rotation.x = lerp(0.4, nPose.rot.x, ease)
-        nxt.rotation.y = lerp(-0.7, nPose.rot.y, ease)
-        nxt.rotation.z = lerp(0.15, nPose.rot.z, ease)
-
-        if (t >= 1) {
-          cur.visible = false
-          current = next
-          next = (next + 1) % groups.length
-          phase = 'hold'
-          phaseTimer = 0
-        }
-      }
-
-      // Slow base spin on visible model
-      groups[current].rotation.y += 0.0025
-
-      // Subtle purple light pulse
-      purpleLight.intensity = 3 + Math.sin(now * 0.0015) * 0.8
-      purpleLight.position.x = -2 + Math.sin(now * 0.0008) * 0.5
-
-      renderer.render(scene, camera)
-    }
-
-    animate()
-
-    return () => {
-      cancelAnimationFrame(rafId)
-      window.removeEventListener('mousemove', onMouse)
-      window.removeEventListener('resize', onResize)
-      renderer.dispose()
-      canvasRef.current?.removeChild(renderer.domElement)
-    }
-  }, [])
-
   return (
-    <section className="relative w-full min-h-screen bg-[#0a0a0f] overflow-hidden flex flex-col">
+    <>
+      {/* Keyframe for star twinkle */}
+      <style>{`
+        @keyframes twinkle {
+          0%,100% { opacity: var(--op); }
+          50%      { opacity: calc(var(--op) * 0.3); }
+        }
+      `}</style>
 
-      {/* ── Stars background ───────────────────────────────────────────────── */}
-      <div className="absolute inset-0 pointer-events-none">
-        {Array.from({ length: 60 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full bg-white"
-            style={{
-              width: Math.random() * 2 + 1 + 'px',
-              height: Math.random() * 2 + 1 + 'px',
-              top: Math.random() * 100 + '%',
-              left: Math.random() * 100 + '%',
-              opacity: Math.random() * 0.5 + 0.1,
-            }}
-          />
-        ))}
-      </div>
-
-      {/* ── Purple glow blobs ──────────────────────────────────────────────── */}
-      <div
-        className="absolute pointer-events-none"
+      <section
         style={{
-          width: 600,
-          height: 600,
-          borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(99,66,255,0.18) 0%, transparent 70%)',
-          top: '-10%',
-          right: '10%',
-          filter: 'blur(40px)',
+          position: 'relative',
+          width: '100%',
+          minHeight: '100vh',
+          backgroundColor: '#07070e',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
         }}
-      />
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          width: 400,
-          height: 400,
-          borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(60,120,255,0.12) 0%, transparent 70%)',
-          bottom: '5%',
-          left: '5%',
-          filter: 'blur(50px)',
-        }}
-      />
-
-      {/* ── 3D Canvas (right half) ─────────────────────────────────────────── */}
-      <div
-        ref={canvasRef}
-        className="absolute inset-0"
-        style={{ zIndex: 1 }}
-      />
-
-      {/* ── Text content (left half, above canvas) ────────────────────────── */}
-      <div
-        className="relative flex flex-col justify-center h-screen px-8 md:px-16 lg:px-24 max-w-[52%]"
-        style={{ zIndex: 2 }}
       >
-        {/* Badge */}
-        <div className="inline-flex items-center gap-2 mb-8 w-fit">
-          <span
-            className="text-xs font-medium tracking-widest uppercase text-white/60 border border-white/10 px-4 py-1.5 rounded-full"
-            style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(8px)' }}
-          >
-            ● Официальный дилер · Москва
-          </span>
-        </div>
-
-        {/* Logo */}
-        <h1 className="mb-4">
-          <span
-            className="font-black text-white select-none"
-            style={{ fontSize: 'clamp(2.5rem, 6vw, 5rem)', letterSpacing: '-0.03em', lineHeight: 1 }}
-          >
-            abc
-          </span>
-          <span
-            className="font-black select-none"
-            style={{
-              fontSize: 'clamp(2.5rem, 6vw, 5rem)',
-              letterSpacing: '-0.03em',
-              lineHeight: 1,
-              background: 'linear-gradient(135deg, #6642ff 0%, #3c78ff 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
-          >
-            store
-          </span>
-        </h1>
-
-        {/* Tagline */}
-        <p
-          className="text-white/40 uppercase tracking-[0.25em] text-sm mb-4"
+        {/* ── Navbar ───────────────────────────────────────────────────────── */}
+        <nav
+          style={{
+            position: 'relative',
+            zIndex: 10,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '1.2rem 2.5rem',
+            borderBottom: '1px solid rgba(255,255,255,0.05)',
+            backdropFilter: 'blur(16px)',
+            backgroundColor: 'rgba(7,7,14,0.6)',
+          }}
         >
-          Гаджеты для жизни
-        </p>
-
-        {/* Value prop */}
-        <p
-          className="text-white/70 mb-10 leading-relaxed max-w-md"
-          style={{ fontSize: 'clamp(1rem, 1.5vw, 1.15rem)' }}
-        >
-          iPhone, Ray-Ban Meta, MacBook, WHOOP — оригинальная техника с гарантией,
-          доставкой по Москве и поддержкой 24/7.
-        </p>
-
-        {/* CTA */}
-        <div className="flex flex-wrap items-center gap-4">
-          <a
-            href="/catalog"
-            className="group flex items-center gap-3 font-semibold text-white rounded-xl transition-all duration-300"
-            style={{
-              background: 'linear-gradient(135deg, #6642ff 0%, #3c78ff 100%)',
-              padding: '0.85rem 2rem',
-              boxShadow: '0 0 40px rgba(100,66,255,0.4)',
-              fontSize: '1rem',
-            }}
-            onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 0 60px rgba(100,66,255,0.65)')}
-            onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 0 40px rgba(100,66,255,0.4)')}
-          >
-            Перейти в каталог
-            <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+          <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'baseline' }}>
+            <span style={{ fontWeight: 900, color: '#fff', fontSize: '1.4rem', letterSpacing: '-0.03em' }}>abc</span>
+            <span style={{
+              fontWeight: 900, fontSize: '1.4rem', letterSpacing: '-0.03em',
+              background: 'linear-gradient(135deg,#6642ff 0%,#3c78ff 100%)',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+            }}>store</span>
           </a>
 
-          <a
-            href="/contacts"
-            className="flex items-center gap-2 font-medium text-white/60 hover:text-white/90 transition-colors duration-200"
-            style={{ fontSize: '0.95rem' }}
-          >
-            Контакты
-            <span className="text-white/30">↗</span>
-          </a>
-        </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+            {[{ label: 'Каталог', href: '/catalog' }, { label: 'Контакты', href: '/contacts' }].map(({ label, href }) => (
+              <a key={label} href={href}
+                style={{ color: 'rgba(255,255,255,0.52)', textDecoration: 'none', fontSize: '0.95rem', fontWeight: 500, transition: 'color .2s' }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.52)')}
+              >{label}</a>
+            ))}
+            <a href="/catalog" style={{
+              color: '#fff', textDecoration: 'none', fontSize: '0.875rem', fontWeight: 600,
+              background: 'linear-gradient(135deg,#6642ff 0%,#3c78ff 100%)',
+              padding: '0.5rem 1.25rem', borderRadius: '0.5rem',
+            }}>Купить</a>
+          </div>
+        </nav>
 
-        {/* Stats bar */}
-        <div
-          className="flex items-center gap-8 mt-14 pt-8"
-          style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}
-        >
-          {[
-            { value: '20+', label: 'Товаров' },
-            { value: '1 год', label: 'Гарантия' },
-            { value: '24/7', label: 'Поддержка' },
-            { value: '0 ₽', label: 'Доставка' },
-          ].map(s => (
-            <div key={s.label} className="flex flex-col">
-              <span className="text-white font-bold" style={{ fontSize: '1.25rem', lineHeight: 1 }}>{s.value}</span>
-              <span className="text-white/35 text-xs mt-1">{s.label}</span>
-            </div>
+        {/* ── Stars ────────────────────────────────────────────────────────── */}
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
+          {STARS.map(s => (
+            <div key={s.id} style={{
+              position: 'absolute',
+              borderRadius: '50%',
+              backgroundColor: '#fff',
+              width: s.size + 'px',
+              height: s.size + 'px',
+              top: s.top + '%',
+              left: s.left + '%',
+              opacity: s.opacity,
+              ['--op' as string]: s.opacity,
+              animation: s.anim,
+            }} />
           ))}
         </div>
-      </div>
 
-      {/* ── Model label (bottom right) ─────────────────────────────────────── */}
-      <div
-        className="absolute bottom-8 right-8 text-white/20 text-xs tracking-widest uppercase select-none"
-        style={{ zIndex: 2 }}
-      >
-        3D Preview
-      </div>
-    </section>
+        {/* ── Glow blobs ───────────────────────────────────────────────────── */}
+        <div style={{
+          position: 'absolute', pointerEvents: 'none', zIndex: 0,
+          width: 720, height: 720, borderRadius: '50%',
+          background: 'radial-gradient(ellipse,rgba(100,66,255,0.16) 0%,transparent 68%)',
+          top: '-14%', right: '6%', filter: 'blur(55px)',
+        }} />
+        <div style={{
+          position: 'absolute', pointerEvents: 'none', zIndex: 0,
+          width: 480, height: 480, borderRadius: '50%',
+          background: 'radial-gradient(ellipse,rgba(56,110,255,0.10) 0%,transparent 68%)',
+          bottom: '4%', left: '2%', filter: 'blur(60px)',
+        }} />
+        <div style={{
+          position: 'absolute', pointerEvents: 'none', zIndex: 0,
+          width: 350, height: 350, borderRadius: '50%',
+          background: 'radial-gradient(ellipse,rgba(0,180,255,0.08) 0%,transparent 68%)',
+          top: '30%', right: '18%', filter: 'blur(45px)',
+        }} />
+
+        {/* ── Sketchfab 3D Model ───────────────────────────────────────────── */}
+        <iframe
+          src={MODEL_URL}
+          title="iPhone 17 Pro 3D Model"
+          allow="autoplay; fullscreen; xr-spatial-tracking"
+          style={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            width: '48%',
+            height: '100%',
+            border: 'none',
+            zIndex: 2,
+            background: 'transparent',
+          }}
+        />
+
+        {/* ── Hero text ────────────────────────────────────────────────────── */}
+        <div style={{
+          position: 'relative',
+          zIndex: 5,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          flex: 1,
+          paddingLeft: 'clamp(2rem, 6vw, 6rem)',
+          paddingRight: '1rem',
+          paddingTop: '2rem',
+          paddingBottom: '2rem',
+          maxWidth: '48%',
+        }}>
+          {/* Badge */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', marginBottom: '1.8rem', width: 'fit-content' }}>
+            <span style={{
+              fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.16em',
+              textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              padding: '0.32rem 0.9rem', borderRadius: '9999px',
+              background: 'rgba(255,255,255,0.035)', backdropFilter: 'blur(8px)',
+            }}>
+              ● Официальный дилер · Москва
+            </span>
+          </div>
+
+          {/* Logo */}
+          <h1 style={{ margin: '0 0 0.7rem', lineHeight: 1 }}>
+            <span style={{
+              fontWeight: 900, color: '#fff',
+              fontSize: 'clamp(2.8rem, 5.8vw, 5.5rem)',
+              letterSpacing: '-0.035em', lineHeight: 1, userSelect: 'none',
+            }}>abc</span>
+            <span style={{
+              fontWeight: 900,
+              fontSize: 'clamp(2.8rem, 5.8vw, 5.5rem)',
+              letterSpacing: '-0.035em', lineHeight: 1, userSelect: 'none',
+              background: 'linear-gradient(135deg,#6642ff 0%,#3c78ff 100%)',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+            }}>store</span>
+          </h1>
+
+          {/* Tagline */}
+          <p style={{ color: 'rgba(255,255,255,0.32)', textTransform: 'uppercase', letterSpacing: '0.25em', fontSize: '0.8rem', margin: '0 0 0.9rem' }}>
+            Гаджеты для жизни
+          </p>
+
+          {/* Product callout */}
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: '0.6rem',
+            margin: '0 0 1.2rem',
+            padding: '0.5rem 1rem',
+            borderRadius: '0.6rem',
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            width: 'fit-content',
+          }}>
+            <span style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#5ac8fa', display: 'inline-block', boxShadow: '0 0 8px #5ac8fa' }} />
+            <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.85rem', fontWeight: 500 }}>
+              iPhone 17 Pro Max — Blue Titanium
+            </span>
+          </div>
+
+          {/* Description */}
+          <p style={{ color: 'rgba(255,255,255,0.6)', lineHeight: 1.65, maxWidth: '27rem', fontSize: 'clamp(0.92rem, 1.3vw, 1.08rem)', margin: '0 0 2.2rem' }}>
+            iPhone, Ray-Ban Meta, MacBook, WHOOP — оригинальная техника с гарантией, доставкой по Москве и поддержкой 24/7.
+          </p>
+
+          {/* CTA */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1rem' }}>
+            <a href="/catalog"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.65rem',
+                fontWeight: 600, color: '#fff', borderRadius: '0.75rem',
+                background: 'linear-gradient(135deg,#6642ff 0%,#3c78ff 100%)',
+                padding: '0.82rem 1.85rem',
+                boxShadow: '0 0 38px rgba(100,66,255,0.36)',
+                fontSize: '0.98rem', textDecoration: 'none',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 0 58px rgba(100,66,255,0.60)')}
+              onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 0 38px rgba(100,66,255,0.36)')}
+            >
+              Перейти в каталог <span>→</span>
+            </a>
+            <a href="/contacts"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 500, color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontSize: '0.93rem' }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.88)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}
+            >
+              Контакты <span style={{ color: 'rgba(255,255,255,0.25)' }}>↗</span>
+            </a>
+          </div>
+
+          {/* Stats */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '1.8rem',
+            marginTop: '3.2rem', paddingTop: '1.6rem',
+            borderTop: '1px solid rgba(255,255,255,0.06)',
+          }}>
+            {[['20+','Товаров'],['1 год','Гарантия'],['24/7','Поддержка'],['0 ₽','Доставка']].map(([v, l]) => (
+              <div key={l} style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ color: '#fff', fontWeight: 700, fontSize: '1.15rem', lineHeight: 1 }}>{v}</span>
+                <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.7rem', marginTop: '0.2rem' }}>{l}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Drag hint ────────────────────────────────────────────────────── */}
+        <div style={{
+          position: 'absolute', bottom: '1.6rem', right: '2rem',
+          color: 'rgba(255,255,255,0.18)', fontSize: '0.68rem',
+          letterSpacing: '0.14em', textTransform: 'uppercase',
+          userSelect: 'none', zIndex: 6,
+        }}>
+          Drag to rotate · Scroll to zoom
+        </div>
+      </section>
+    </>
   )
 }
