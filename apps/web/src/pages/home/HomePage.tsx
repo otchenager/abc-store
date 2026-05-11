@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import HeroSection from '../../components/HeroSection'
 
 export function HomePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
