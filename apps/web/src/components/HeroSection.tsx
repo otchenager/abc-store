@@ -1,8 +1,16 @@
-import { useEffect, useRef, useMemo, useState, Suspense } from 'react'
+import { useEffect, useRef, useMemo, useState, Suspense, Component, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useGLTF, Environment } from '@react-three/drei'
 import * as THREE from 'three'
+
+class CanvasErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false }
+  static getDerivedStateFromError() { return { failed: true } }
+  render() {
+    return this.state.failed ? null : this.props.children
+  }
+}
 
 // ─── Stars ───────────────────────────────────────────────────────────────────
 const STARS = Array.from({ length: 70 }, (_, i) => ({
@@ -195,6 +203,7 @@ export default function HeroSection() {
           height: '100%',
           zIndex: 2,
         }}>
+          <CanvasErrorBoundary>
           {!modelLoaded && (
             <div style={{
               position: 'absolute', inset: 0, zIndex: 1,
@@ -225,6 +234,7 @@ export default function HeroSection() {
               <Environment preset="city" />
             </Suspense>
           </Canvas>
+          </CanvasErrorBoundary>
         </div>
 
         {/* Hero text */}
