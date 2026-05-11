@@ -113,7 +113,7 @@ function IPhoneModel({ onLoaded }: { onLoaded: () => void }) {
   })
 
   return (
-    <group ref={groupRef} position={[0, 0, 0]} rotation={[0.08, Math.PI + 0.3, 0.05]} scale={0.22}>
+    <group ref={groupRef} position={[0, 0, 0]} rotation={[0.08, Math.PI + 0.3, 0.05]} scale={1.1}>
       <primitive object={scene} />
     </group>
   )
@@ -220,7 +220,7 @@ export default function HeroSection() {
             </div>
           )}
           <Canvas
-            camera={{ position: [0, 0, 5], fov: 42 }}
+            camera={{ position: [0, 0, 14], fov: 42 }}
             style={{ width: '100%', height: '100%', background: 'transparent' }}
             gl={{ alpha: true, antialias: true }}
           >
