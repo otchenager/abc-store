@@ -1,5 +1,6 @@
 {
   "buildCommand": "prisma generate && prisma migrate deploy && npx tsx scripts/seed-if-empty.ts",
+  "outputDirectory": ".",
   "rewrites": [
     { "source": "/(.*)", "destination": "/api/index" }
   ]
