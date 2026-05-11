@@ -77,7 +77,7 @@ function makeScreenTexture(): THREE.CanvasTexture {
 
 // ─── iPhone 3D Model ─────────────────────────────────────────────────────────
 function IPhoneModel({ onLoaded }: { onLoaded: () => void }) {
-  const { scene } = useGLTF('/models/iphone_17_pro_max.glb')
+  const { scene } = useGLTF('/models/iphone17pro.glb')
   const groupRef = useRef<THREE.Group>(null)
   const screenTex = useMemo(() => makeScreenTexture(), [])
 
