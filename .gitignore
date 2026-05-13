@@ -38,3 +38,4 @@ apps/api/prisma/dev.db-journal
 .idea
 .DS_Store
 Thumbs.db
+.vercel

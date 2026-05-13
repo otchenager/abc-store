@@ -1,8 +1,9 @@
 import { useEffect, useRef, useMemo, useState, Suspense, Component, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { useGLTF, Environment } from '@react-three/drei'
+import { useGLTF, Environment, OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
+import Navbar from './Navbar'
 
 class CanvasErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false }
@@ -27,7 +28,29 @@ const CSS = `
     0%,100% { opacity: var(--op); }
     50%      { opacity: calc(var(--op) * 0.3); }
   }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
+  @media (max-width: 767px) {
+    .hero-canvas-wrap {
+      position: relative !important;
+      top: auto !important;
+      right: auto !important;
+      width: 100% !important;
+      height: 60vw !important;
+      min-height: 260px !important;
+      max-height: 380px !important;
+    }
+    .hero-content {
+      max-width: 100% !important;
+      padding-left: 1.5rem !important;
+      padding-right: 1.5rem !important;
+      padding-top: 1.5rem !important;
+    }
+    .hero-stats {
+      gap: 1.2rem !important;
+      flex-wrap: wrap !important;
+    }
+  }
 `
 
 // ─── Logo texture for iPhone screen ──────────────────────────────────────────
@@ -37,34 +60,28 @@ function makeScreenTexture(): THREE.CanvasTexture {
   canvas.height = 1024
   const ctx = canvas.getContext('2d')!
 
-  // Background
   ctx.fillStyle = '#05051a'
   ctx.fillRect(0, 0, 1024, 1024)
 
-  // Purple glow
   const grad = ctx.createRadialGradient(512, 480, 60, 512, 480, 420)
   grad.addColorStop(0, 'rgba(100,66,255,0.25)')
   grad.addColorStop(1, 'rgba(0,0,0,0)')
   ctx.fillStyle = grad
   ctx.fillRect(0, 0, 1024, 1024)
 
-  // "abc" white
   ctx.font = 'bold 200px Arial'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.fillStyle = '#ffffff'
   ctx.fillText('abc', 340, 460)
 
-  // "store" purple
   ctx.fillStyle = '#6642ff'
   ctx.fillText('store', 730, 460)
 
-  // Tagline
   ctx.font = '52px Arial'
   ctx.fillStyle = 'rgba(255,255,255,0.3)'
   ctx.fillText('ГАДЖЕТЫ ДЛЯ ЖИЗНИ', 512, 610)
 
-  // Blue dot indicator
   ctx.beginPath()
   ctx.arc(512, 720, 18, 0, Math.PI * 2)
   ctx.fillStyle = '#5ac8fa'
@@ -104,11 +121,10 @@ function IPhoneModel({ onLoaded }: { onLoaded: () => void }) {
     onLoaded()
   }, [scene, onLoaded])
 
-  // Floating + slow rotation animation
+  // Only floating animation; OrbitControls handles rotation
   useFrame(({ clock }) => {
     if (!groupRef.current) return
     const t = clock.getElapsedTime()
-    groupRef.current.rotation.y = Math.PI + 0.3 + Math.sin(t * 0.3) * 0.12
     groupRef.current.position.y = Math.sin(t * 0.7) * 0.06
   })
 
@@ -136,37 +152,7 @@ export default function HeroSection() {
         flexDirection: 'column',
       }}>
 
-        {/* Navbar */}
-        <nav style={{
-          position: 'relative', zIndex: 10,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '1.2rem 2.5rem',
-          borderBottom: '1px solid rgba(255,255,255,0.05)',
-          backdropFilter: 'blur(16px)',
-          backgroundColor: 'rgba(7,7,14,0.6)',
-        }}>
-          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'baseline' }}>
-            <span style={{ fontWeight: 900, color: '#fff', fontSize: '1.4rem', letterSpacing: '-0.03em' }}>abc</span>
-            <span style={{
-              fontWeight: 900, fontSize: '1.4rem', letterSpacing: '-0.03em',
-              background: 'linear-gradient(135deg,#6642ff 0%,#3c78ff 100%)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-            }}>store</span>
-          </Link>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-            {[{ label: 'Каталог', to: '/catalog' }, { label: 'Контакты', to: '/contacts' }].map(({ label, to }) => (
-              <Link key={label} to={to} style={{ color: 'rgba(255,255,255,0.52)', textDecoration: 'none', fontSize: '0.95rem', fontWeight: 500 }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.52)')}
-              >{label}</Link>
-            ))}
-            <Link to="/catalog" style={{
-              color: '#fff', textDecoration: 'none', fontSize: '0.875rem', fontWeight: 600,
-              background: 'linear-gradient(135deg,#6642ff 0%,#3c78ff 100%)',
-              padding: '0.5rem 1.25rem', borderRadius: '0.5rem',
-            }}>Купить</Link>
-          </div>
-        </nav>
+        <Navbar />
 
         {/* Stars */}
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
@@ -195,50 +181,8 @@ export default function HeroSection() {
           }} />
         ))}
 
-        {/* 3D Canvas */}
-        <div style={{
-          position: 'absolute',
-          top: 0, right: 0,
-          width: '50%',
-          height: '100%',
-          zIndex: 2,
-        }}>
-          <CanvasErrorBoundary>
-          {!modelLoaded && (
-            <div style={{
-              position: 'absolute', inset: 0, zIndex: 1,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              pointerEvents: 'none',
-            }}>
-              <div style={{
-                width: 48, height: 48, borderRadius: '50%',
-                border: '2px solid rgba(100,66,255,0.15)',
-                borderTop: '2px solid rgba(100,66,255,0.7)',
-                animation: 'spin 1s linear infinite',
-              }} />
-              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-            </div>
-          )}
-          <Canvas
-            camera={{ position: [0, 0, 5], fov: 42 }}
-            style={{ width: '100%', height: '100%', background: 'transparent' }}
-            gl={{ alpha: true, antialias: true }}
-          >
-            <ambientLight intensity={0.5} />
-            <directionalLight position={[3, 5, 5]} intensity={2} color="#8899ff" />
-            <directionalLight position={[-4, 2, 2]} intensity={1.2} color="#4466ff" />
-            <directionalLight position={[0, -3, -5]} intensity={1.8} color="#ffffff" />
-            <pointLight position={[-2, 2, 3]} intensity={3} color="#7755ff" />
-            <Suspense fallback={null}>
-              <IPhoneModel onLoaded={() => setModelLoaded(true)} />
-              <Environment preset="city" />
-            </Suspense>
-          </Canvas>
-          </CanvasErrorBoundary>
-        </div>
-
-        {/* Hero text */}
-        <div style={{
+        {/* Hero text — comes first in DOM so mobile stacks text → 3D */}
+        <div className="hero-content" style={{
           position: 'relative', zIndex: 5,
           display: 'flex', flexDirection: 'column',
           justifyContent: 'center', flex: 1,
@@ -260,20 +204,29 @@ export default function HeroSection() {
             </span>
           </div>
 
-          {/* Logo */}
-          <h1 style={{ margin: '0 0 0.7rem', lineHeight: 1 }}>
+          {/* H1 — value proposition for SEO */}
+          <h1 style={{ margin: '0 0 0.7rem', lineHeight: 1.1 }}>
             <span style={{
+              display: 'block',
               fontWeight: 900, color: '#fff',
               fontSize: 'clamp(2.8rem, 5.8vw, 5.5rem)',
               letterSpacing: '-0.035em', userSelect: 'none',
-            }}>abc</span>
+            }}>
+              <span>abc</span>
+              <span style={{
+                background: 'linear-gradient(135deg,#6642ff 0%,#3c78ff 100%)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+              }}>store</span>
+            </span>
             <span style={{
-              fontWeight: 900,
-              fontSize: 'clamp(2.8rem, 5.8vw, 5.5rem)',
-              letterSpacing: '-0.035em', userSelect: 'none',
-              background: 'linear-gradient(135deg,#6642ff 0%,#3c78ff 100%)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-            }}>store</span>
+              display: 'block',
+              fontWeight: 700, color: 'rgba(255,255,255,0.72)',
+              fontSize: 'clamp(1rem, 2vw, 1.6rem)',
+              letterSpacing: '-0.02em', userSelect: 'none',
+              marginTop: '0.35rem',
+            }}>
+              iPhone, MacBook и Ray-Ban с доставкой по Москве
+            </span>
           </h1>
 
           {/* Tagline */}
@@ -328,7 +281,7 @@ export default function HeroSection() {
           </div>
 
           {/* Stats */}
-          <div style={{
+          <div className="hero-stats" style={{
             display: 'flex', alignItems: 'center', gap: '1.8rem',
             marginTop: '3.2rem', paddingTop: '1.6rem',
             borderTop: '1px solid rgba(255,255,255,0.06)',
@@ -342,15 +295,55 @@ export default function HeroSection() {
           </div>
         </div>
 
-        {/* Drag hint */}
-        <div style={{
-          position: 'absolute', bottom: '1.6rem', right: '2rem',
-          color: 'rgba(255,255,255,0.18)', fontSize: '0.68rem',
-          letterSpacing: '0.14em', textTransform: 'uppercase',
-          userSelect: 'none', zIndex: 6,
+        {/* 3D Canvas — after text in DOM so it flows below on mobile */}
+        <div className="hero-canvas-wrap" style={{
+          position: 'absolute',
+          top: 0, right: 0,
+          width: '50%',
+          height: '100%',
+          zIndex: 2,
         }}>
-          Drag to rotate · Scroll to zoom
+          <CanvasErrorBoundary>
+            {!modelLoaded && (
+              <div style={{
+                position: 'absolute', inset: 0, zIndex: 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                pointerEvents: 'none',
+              }}>
+                <div style={{
+                  width: 48, height: 48, borderRadius: '50%',
+                  border: '2px solid rgba(100,66,255,0.15)',
+                  borderTop: '2px solid rgba(100,66,255,0.7)',
+                  animation: 'spin 1s linear infinite',
+                }} />
+              </div>
+            )}
+            <Canvas
+              camera={{ position: [0, 0, 5], fov: 42 }}
+              style={{ width: '100%', height: '100%', background: 'transparent' }}
+              gl={{ alpha: true, antialias: true }}
+            >
+              <ambientLight intensity={0.5} />
+              <directionalLight position={[3, 5, 5]} intensity={2} color="#8899ff" />
+              <directionalLight position={[-4, 2, 2]} intensity={1.2} color="#4466ff" />
+              <directionalLight position={[0, -3, -5]} intensity={1.8} color="#ffffff" />
+              <pointLight position={[-2, 2, 3]} intensity={3} color="#7755ff" />
+              <Suspense fallback={null}>
+                <IPhoneModel onLoaded={() => setModelLoaded(true)} />
+                <Environment preset="city" />
+              </Suspense>
+              <OrbitControls
+                enablePan={false}
+                enableZoom={true}
+                autoRotate
+                autoRotateSpeed={0.6}
+                minPolarAngle={Math.PI * 0.3}
+                maxPolarAngle={Math.PI * 0.7}
+              />
+            </Canvas>
+          </CanvasErrorBoundary>
         </div>
+
       </section>
     </>
   )
