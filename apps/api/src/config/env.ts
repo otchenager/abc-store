@@ -14,5 +14,7 @@ export const env = {
   NODE_ENV: process.env.NODE_ENV ?? "development",
   PORT: Number(process.env.PORT ?? 4000),
   CLIENT_URL: process.env.CLIENT_URL ?? "http://localhost:5173",
-  DATABASE_URL: getRequiredEnv("DATABASE_URL")
+  DATABASE_URL: getRequiredEnv("DATABASE_URL"),
+  TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN ?? "",
+  TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID ?? "",
 };

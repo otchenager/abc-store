@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { useScrollReveal } from "../hooks/useScrollReveal";
 import {
   getProducts,
   getProductFilters,
@@ -10,21 +11,40 @@ import {
   type ProductFilters,
 } from "../shared/api/product";
 
-// ─── Курс доллара ─────────────────────────────────────────────────────────────
-const USD_TO_RUB = 90;
-const toRub = (usd: number) => Math.round(usd * USD_TO_RUB);
-const formatRub = (usd: number) =>
-  toRub(usd).toLocaleString("ru-RU") + " ₽";
+const formatRub = (rub: number) => rub.toLocaleString("ru-RU") + " ₽";
+
+function seededRand(seed: string, min: number, max: number) {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (Math.imul(31, h) + seed.charCodeAt(i)) | 0;
+  return min + (Math.abs(h) % (max - min + 1));
+}
 
 interface CartItem { product: ProductWithRelations; qty: number; }
 
 // ─── Переводы категорий ───────────────────────────────────────────────────────
 const CATEGORY_RU: Record<string, string> = {
-  phones: "Смартфоны", laptops: "Ноутбуки", tablets: "Планшеты",
-  headphones: "Наушники", watches: "Часы",
+  iphone: "iPhone",
+  macbook: "MacBook",
+  airpods: "AirPods",
+  watches: "Apple Watch",
+  vision: "Apple Vision",
+  dji: "DJI",
+  "smart-glasses": "Ray-Ban",
+  fitness: "WHOOP",
+  dictaphones: "Plaud",
+  headphones: "Beats",
 };
 const CATEGORY_EMOJI: Record<string, string> = {
-  phones: "📱", laptops: "💻", tablets: "🖥️", headphones: "🎧", watches: "⌚",
+  iphone: "📱",
+  macbook: "💻",
+  airpods: "🎧",
+  watches: "⌚",
+  vision: "🥽",
+  dji: "🚁",
+  "smart-glasses": "🕶️",
+  fitness: "💚",
+  dictaphones: "🎙️",
+  headphones: "🎵",
 };
 
 // ─── Стили ────────────────────────────────────────────────────────────────────
@@ -55,7 +75,7 @@ function CartSidebar({
   onRemove: (id: string) => void;
   onOrder: () => void;
 }) {
-  const total = cart.reduce((s, i) => s + toRub(i.product.price) * i.qty, 0);
+  const total = cart.reduce((s, i) => s + i.product.price * i.qty, 0);
   return (
     <>
       <div onClick={onClose} style={{
@@ -139,23 +159,31 @@ function OrderModal({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
 
-  const total = cart.reduce((s, i) => s + toRub(i.product.price) * i.qty, 0);
+  const total = cart.reduce((s, i) => s + i.product.price * i.qty, 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !phone.trim()) { setError("Заполните имя и телефон"); return; }
     setSending(true); setError("");
     try {
-      await postOrder({
-        customerName: name.trim(),
-        customerPhone: phone.trim(),
-        comment: comment.trim() || undefined,
-        items: cart.map((i) => ({
-          productId: i.product.id,
-          quantity: i.qty,
-          price: i.product.price,
-        })),
+      const response = await fetch("http://localhost:4000/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          phone: phone.trim(),
+          comment: comment.trim() || undefined,
+          items: cart.map(i => ({
+            productId: i.product.id,
+            name: i.product.name,
+            price: i.product.price,
+            qty: i.qty,
+            quantity: i.qty,
+          })),
+          total: cart.reduce((s, i) => s + i.product.price * i.qty, 0),
+        }),
       });
+      if (!response.ok) throw new Error("Failed");
       setSending(false);
       onSuccess();
     } catch {
@@ -183,7 +211,7 @@ function OrderModal({
           {cart.map(({ product, qty }) => (
             <div key={product.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "5px 0", borderBottom: "1px solid var(--border)" }}>
               <span style={{ color: "var(--muted)" }}>{product.name} × {qty}</span>
-              <span style={{ fontWeight: 600 }}>{(toRub(product.price) * qty).toLocaleString("ru-RU")} ₽</span>
+              <span style={{ fontWeight: 600 }}>{(product.price * qty).toLocaleString("ru-RU")} ₽</span>
             </div>
           ))}
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, fontWeight: 700, fontSize: 15 }}>
@@ -263,76 +291,85 @@ function SuccessModal({ onClose }: { onClose: () => void }) {
 }
 
 // ─── ProductCard ──────────────────────────────────────────────────────────────
-function ProductCard({ product, onAddToCart, inCart }: {
+function ProductCard({ product, onAddToCart, inCart, reveal }: {
   product: ProductWithRelations;
   onAddToCart: (p: ProductWithRelations) => void;
   inCart: boolean;
+  reveal?: boolean;
 }) {
   const hasDiscount = product.oldPrice !== null && product.oldPrice > product.price;
   const discount = hasDiscount ? Math.round(((product.oldPrice! - product.price) / product.oldPrice!) * 100) : null;
-  const emoji = CATEGORY_EMOJI[product.category.slug] ?? "📦";
 
   return (
-    <article style={{
-      background: "var(--card-bg)", border: "1px solid var(--border)",
+    <article className={`product-card${reveal ? " reveal" : ""}`} style={{
+      background: "#13131a",
+      border: "1px solid rgba(255,255,255,0.06)",
       borderRadius: 16, overflow: "hidden", display: "flex", flexDirection: "column",
-      transition: "transform 0.2s, box-shadow 0.2s", cursor: "pointer",
-    }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.transform = "translateY(-4px)";
-        (e.currentTarget as HTMLElement).style.boxShadow = "0 12px 40px rgba(0,0,0,0.25)";
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
-        (e.currentTarget as HTMLElement).style.boxShadow = "none";
-      }}
-    >
-      <div style={{ aspectRatio: "4/3", background: "var(--img-bg)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
-        {product.imageUrl
-          ? <img src={product.imageUrl} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: 16 }} loading="lazy" />
-          : <div style={{ fontSize: 52, opacity: 0.2 }}>{emoji}</div>
-        }
-        {discount !== null && (
-          <span style={{ position: "absolute", top: 10, right: 10, background: "var(--accent)", color: "#fff", fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 6 }}>
-            -{discount}%
-          </span>
-        )}
-        {product.isFeatured && (
-          <span style={{ position: "absolute", top: 10, left: 10, background: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)", color: "var(--text)", fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-            Хит
-          </span>
-        )}
-      </div>
-      <div style={{ padding: "14px 16px 18px", flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
-        <div style={{ fontSize: 11, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-          {product.brand?.name ?? CATEGORY_RU[product.category.slug] ?? product.category.name}
-        </div>
-        <div style={{ fontSize: 15, fontWeight: 600, lineHeight: 1.3 }}>{product.name}</div>
-        {product.description && (
-          <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.5, flexGrow: 1, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-            {product.description}
-          </div>
-        )}
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 6 }}>
-          <span style={{ fontSize: 18, fontWeight: 700 }}>{formatRub(product.price)}</span>
-          {product.oldPrice !== null && (
-            <span style={{ fontSize: 13, color: "var(--muted)", textDecoration: "line-through" }}>
-              {formatRub(product.oldPrice)}
+      transition: "transform 0.25s, box-shadow 0.25s, border-color 0.25s",
+    }}>
+      <Link to={`/product/${product.slug}`} style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", flex: 1 }}>
+        {/* Image zone */}
+        <div style={{
+          aspectRatio: "4/3", background: "#0d0d14",
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          position: "relative", overflow: "hidden", padding: "16px 12px",
+        }}>
+          {product.imageUrl
+            ? <img className="card-img" src={product.imageUrl} alt={product.name}
+                style={{ width: "100%", height: "100%", objectFit: "contain", transition: "transform 0.4s ease" }}
+                loading="lazy" />
+            : <>
+                <div style={{ fontSize: 72, lineHeight: 1 }}>
+                  {CATEGORY_EMOJI[product.category.slug] ?? "📦"}
+                </div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", textAlign: "center", marginTop: 8, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", padding: "0 4px" }}>
+                  {product.name}
+                </div>
+              </>
+          }
+          {discount !== null && (
+            <span style={{ position: "absolute", top: 0, right: 0, background: "#ef4444", color: "#fff", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: "0 0 0 10px" }}>
+              -{discount}%
+            </span>
+          )}
+          {product.isFeatured && (
+            <span style={{ position: "absolute", top: 0, left: 0, background: "rgba(99,102,241,0.9)", color: "#fff", fontSize: 10, fontWeight: 700, padding: "4px 10px", borderRadius: "0 0 10px 0", letterSpacing: "0.05em" }}>
+              ХИТ
             </span>
           )}
         </div>
+
+        {/* Info zone */}
+        <div style={{ padding: "14px 16px 16px", display: "flex", flexDirection: "column", flex: 1 }}>
+          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6366f1", marginBottom: 4 }}>
+            {product.brand?.name ?? CATEGORY_RU[product.category.slug] ?? product.category.name}
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3, color: "#f0f0f5", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+            {product.name}
+          </div>
+          <div style={{ marginTop: 8, display: "flex", alignItems: "baseline", gap: 8 }}>
+            <span style={{ fontSize: 18, fontWeight: 800, color: "#f0f0f5" }}>{formatRub(product.price)}</span>
+            {product.oldPrice !== null && (
+              <span style={{ fontSize: 12, color: "#6b6b80", textDecoration: "line-through" }}>
+                {formatRub(product.oldPrice)}
+              </span>
+            )}
+          </div>
+        </div>
+      </Link>
+
+      {/* CTA */}
+      <div style={{ padding: "0 16px 16px" }}>
         <button
+          className="cta-btn"
           onClick={() => onAddToCart(product)}
           style={{
-            marginTop: 10, padding: "9px 0", borderRadius: 10,
-            border: inCart ? "none" : "1px solid var(--border)",
-            background: inCart ? "var(--accent)" : "transparent",
-            color: inCart ? "#fff" : "var(--text)",
-            fontSize: 13, fontWeight: 600, cursor: "pointer",
-            transition: "all 0.15s", width: "100%",
+            width: "100%", padding: "10px 0", borderRadius: 8, marginTop: 0,
+            background: inCart ? "#6366f1" : "transparent",
+            border: inCart ? "1px solid #6366f1" : "1px solid rgba(255,255,255,0.1)",
+            color: inCart ? "#fff" : "#f0f0f5",
+            fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s",
           }}
-          onMouseEnter={(e) => { if (!inCart) { (e.currentTarget as HTMLButtonElement).style.background = "var(--accent)"; (e.currentTarget as HTMLButtonElement).style.color = "#fff"; (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--accent)"; } }}
-          onMouseLeave={(e) => { if (!inCart) { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = "var(--text)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)"; } }}
         >
           {inCart ? "✓ В корзине" : "В корзину"}
         </button>
@@ -348,12 +385,11 @@ function FilterSidebar({ filters, activeFilters, onChange }: {
   onChange: (updates: Partial<ProductFilters>) => void;
 }) {
   const totalCount = filters.categories.reduce((s, c) => s + c.count, 0);
-  const toUsd = (rub: number) => Math.round(rub / USD_TO_RUB);
   const PRICE_RANGES = [
-    { label: "До 15 000 ₽", min: 0, max: toUsd(15000) },
-    { label: "15 000 – 60 000 ₽", min: toUsd(15000), max: toUsd(60000) },
-    { label: "60 000 – 100 000 ₽", min: toUsd(60000), max: toUsd(100000) },
-    { label: "Свыше 100 000 ₽", min: toUsd(100000), max: 99999 },
+    { label: "До 15 000 ₽", min: 0, max: 15000 },
+    { label: "15 000 – 60 000 ₽", min: 15000, max: 60000 },
+    { label: "60 000 – 100 000 ₽", min: 60000, max: 100000 },
+    { label: "Свыше 100 000 ₽", min: 100000, max: 9999999 },
   ];
   return (
     <aside style={{ display: "flex", flexDirection: "column", gap: 28 }}>
@@ -363,7 +399,16 @@ function FilterSidebar({ filters, activeFilters, onChange }: {
           <button onClick={() => onChange({ category: undefined, page: 1 })} style={filterBtn(!activeFilters.category)}>
             Все <span style={{ marginLeft: "auto", opacity: 0.4 }}>{totalCount}</span>
           </button>
-          {filters.categories.filter((c) => c.count > 0).map((cat) => (
+          {(() => {
+            const CATEGORY_ORDER = ["iphone","macbook","airpods","watches","vision","dji","smart-glasses","fitness","dictaphones","headphones"];
+            const sorted = filters.categories
+              .sort((a, b) => {
+                const ai = CATEGORY_ORDER.indexOf(a.slug);
+                const bi = CATEGORY_ORDER.indexOf(b.slug);
+                return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+              });
+            return sorted;
+          })().map((cat) => (
             <button key={cat.id} onClick={() => onChange({ category: cat.slug, page: 1 })} style={filterBtn(activeFilters.category === cat.slug)}>
               {CATEGORY_EMOJI[cat.slug]} {CATEGORY_RU[cat.slug] ?? cat.name}
               <span style={{ marginLeft: "auto", opacity: 0.4 }}>{cat.count}</span>
@@ -410,6 +455,8 @@ function FilterSidebar({ filters, activeFilters, onChange }: {
 
 // ─── CatalogPage ──────────────────────────────────────────────────────────────
 export function CatalogPage() {
+  useScrollReveal();
+  useEffect(() => { document.title = "Каталог — ABC Store"; return () => { document.title = "ABC Store — Гаджеты для жизни"; }; }, []);
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<ProductWithRelations[]>([]);
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: 12, totalPages: 0 });
@@ -477,6 +524,7 @@ export function CatalogPage() {
   }, [searchParams]);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     setLoading(true); setError(null);
     getProducts(activeFilters)
       .then(({ data, meta }) => { setProducts(data); setMeta(meta); })
@@ -500,6 +548,25 @@ export function CatalogPage() {
         * { box-sizing:border-box; } body { margin:0; background:var(--bg); }
         ::placeholder { color:var(--muted); }
         @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:.7} }
+        .product-card { cursor:pointer; }
+        .product-card:hover { transform:translateY(-4px); box-shadow:0 16px 48px rgba(0,0,0,0.4); border-color:rgba(99,102,241,0.3) !important; }
+        .product-card:hover .card-img { transform:scale(1.06); }
+        .cta-btn:hover { background:#6366f1 !important; border-color:#6366f1 !important; color:#fff !important; }
+        .catalog-layout { display:grid; grid-template-columns:210px 1fr; gap:32px; }
+        .product-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+        .mobile-cats { display:none; }
+        .header-nav { display:flex; align-items:center; gap:20px; font-size:13px; }
+        @media (max-width:768px) {
+          .catalog-layout { grid-template-columns:1fr; }
+          .catalog-sidebar { display:none; }
+          .product-grid { grid-template-columns:repeat(2,1fr); }
+          .header-nav { display:none; }
+          .mobile-cats { display:flex; overflow-x:auto; gap:8px; padding-bottom:4px; margin-bottom:20px; scrollbar-width:none; }
+          .mobile-cats::-webkit-scrollbar { display:none; }
+        }
+        @media (min-width:769px) and (max-width:1100px) {
+          .product-grid { grid-template-columns:repeat(3,1fr); }
+        }
       `}</style>
 
       <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: "inherit", color: "var(--text)" }}>
@@ -521,7 +588,8 @@ export function CatalogPage() {
               <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--muted)" }}>⌕</span>
             </div>
           </form>
-          <nav style={{ display: "flex", alignItems: "center", gap: 20, fontSize: 13 }}>
+          <nav className="header-nav" style={{}}>
+
             <Link to="/" style={{ color: "var(--muted)", textDecoration: "none" }}>Главная</Link>
             <Link to="/catalog" style={{ color: "var(--text)", textDecoration: "none", fontWeight: 600 }}>Каталог</Link>
             <Link to="/contacts" style={{ color: "var(--muted)", textDecoration: "none" }}>Контакты</Link>
@@ -551,14 +619,30 @@ export function CatalogPage() {
             )}
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "210px 1fr", gap: 32 }}>
-            {filterData && <FilterSidebar filters={filterData} activeFilters={activeFilters} onChange={updateFilters} />}
+          {filterData && (
+            <div className="mobile-cats">
+              <button onClick={() => updateFilters({ category: undefined, page: 1 })} style={{ flexShrink: 0, padding: "7px 16px", borderRadius: 20, border: `1px solid ${!activeFilters.category ? "var(--accent)" : "var(--border)"}`, background: !activeFilters.category ? "rgba(99,102,241,0.1)" : "transparent", color: !activeFilters.category ? "var(--accent)" : "var(--text)", fontSize: 13, cursor: "pointer", whiteSpace: "nowrap" }}>Все</button>
+              {(() => {
+                const ORDER = ["iphone","macbook","airpods","watches","vision","dji","smart-glasses","fitness","dictaphones","headphones"];
+                return filterData.categories.filter(c => c.count > 0)
+                  .sort((a, b) => (ORDER.indexOf(a.slug) === -1 ? 99 : ORDER.indexOf(a.slug)) - (ORDER.indexOf(b.slug) === -1 ? 99 : ORDER.indexOf(b.slug)))
+                  .map(cat => (
+                    <button key={cat.id} onClick={() => updateFilters({ category: cat.slug, page: 1 })} style={{ flexShrink: 0, padding: "7px 16px", borderRadius: 20, border: `1px solid ${activeFilters.category === cat.slug ? "var(--accent)" : "var(--border)"}`, background: activeFilters.category === cat.slug ? "rgba(99,102,241,0.1)" : "transparent", color: activeFilters.category === cat.slug ? "var(--accent)" : "var(--text)", fontSize: 13, cursor: "pointer", whiteSpace: "nowrap" }}>
+                      {CATEGORY_EMOJI[cat.slug]} {CATEGORY_RU[cat.slug] ?? cat.name}
+                    </button>
+                  ));
+              })()}
+            </div>
+          )}
+
+          <div className="catalog-layout">
+            {filterData && <div className="catalog-sidebar"><FilterSidebar filters={filterData} activeFilters={activeFilters} onChange={updateFilters} /></div>}
 
             <div>
               {loading && (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 16 }}>
+                <div className="product-grid">
                   {Array.from({ length: 12 }).map((_, i) => (
-                    <div key={i} style={{ borderRadius: 16, background: "var(--card-bg)", aspectRatio: "3/4", animation: "pulse 1.5s ease-in-out infinite" }} />
+                    <div key={i} style={{ borderRadius: 16, background: "var(--card-bg)", aspectRatio: "1/1", animation: "pulse 1.5s ease-in-out infinite" }} />
                   ))}
                 </div>
               )}
@@ -583,9 +667,9 @@ export function CatalogPage() {
 
               {!loading && !error && products.length > 0 && (
                 <>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 16 }}>
-                    {products.map((p) => (
-                      <ProductCard key={p.id} product={p} onAddToCart={addToCart} inCart={cart.some((i) => i.product.id === p.id)} />
+                  <div className="product-grid" key={searchParams.toString()}>
+                    {products.map((p, idx) => (
+                      <ProductCard key={p.id} product={p} onAddToCart={addToCart} inCart={cart.some((i) => i.product.id === p.id)} reveal={idx < 8} />
                     ))}
                   </div>
 

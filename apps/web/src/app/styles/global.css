@@ -18,6 +18,22 @@ code, pre, kbd, samp {
   box-sizing: border-box;
 }
 
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page-enter { animation: pageFadeIn 0.22s ease both; }
+
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 body {
   margin: 0;
   min-width: 320px;
