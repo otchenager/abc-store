@@ -1,0 +1,8 @@
+{
+  "outputDirectory": "apps/web/dist",
+  "buildCommand": "pnpm run build",
+  "installCommand": "pnpm install",
+  "rewrites": [
+    { "source": "/((?!assets/).*)", "destination": "/index.html" }
+  ]
+}
