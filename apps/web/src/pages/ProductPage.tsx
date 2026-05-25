@@ -416,7 +416,7 @@ function getColorImage(slug: string, colorName: string): string | null {
   if (!folder) return null;
   const override = COLOR_FILE_OVERRIDES[slug]?.[colorName];
   const filename = override ?? colorName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-  return `/src/images/${folder}/${filename}.png`;
+  return `/images/${folder}/${filename}.png`;
 }
 
 export function ProductPage() {

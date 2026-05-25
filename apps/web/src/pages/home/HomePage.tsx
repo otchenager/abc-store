@@ -23,8 +23,8 @@ function CinematicHero() {
   }, [started, tagline]);
 
   const floaters = [
-    { src: "/src/images/iphone17.png", top: "12%", left: "8%",   animClass: "float-a", local: true },
-    { src: "/src/images/applewatchultra.png",  top: "12%",  right: "6%",  animClass: "float-b", local: true },
+    { src: "/images/iphone17.png", top: "12%", left: "8%",   animClass: "float-a", local: true },
+    { src: "/images/applewatchultra.png",  top: "12%",  right: "6%",  animClass: "float-b", local: true },
     { src: "https://abcdemo1.vercel.app/DJI_Mavic_4.png", bottom: "15%", left: "8%",  animClass: "float-b", local: false },
     { src: "https://abcdemo1.vercel.app/ray-ban.png",     bottom: "18%", right: "7%", animClass: "float-a", local: false },
   ];
@@ -140,14 +140,14 @@ function CinematicHero() {
 
 // ─── Brand Strip ───────────────────────────────────────────────────────────────
 const BRANDS = [
-  { image: "/src/images/11.png", name: "Apple" },
-  { image: "/src/images/djimic2.png", name: "DJI" },
-  { image: "/src/images/ray-ban.png", name: "Ray-Ban" },
-  { image: "/src/images/whoop.png", name: "WHOOP" },
-  { image: "/src/images/plaude.png", name: "Plaud" },
-  { image: "/src/images/Sony PS5.png", name: "Sony" },
-  { image: "/src/images/yandex.png", name: "Yandex" },
-  { image: "/src/images/dyson.png", name: "Dyson" },
+  { image: "/images/11.png", name: "Apple" },
+  { image: "/images/djimic2.png", name: "DJI" },
+  { image: "/images/ray-ban.png", name: "Ray-Ban" },
+  { image: "/images/whoop.png", name: "WHOOP" },
+  { image: "/images/plaude.png", name: "Plaud" },
+  { image: "/images/Sony PS5.png", name: "Sony" },
+  { image: "/images/yandex.png", name: "Yandex" },
+  { image: "/images/dyson.png", name: "Dyson" },
 
 ];
 
@@ -264,17 +264,17 @@ function FeaturedProducts() {
 // ─── Category Showcase ────────────────────────────────────────────────────────
 const CATEGORIES = [
   // Row 1 — категории
-  { slug: "iphone",      name: "Смартфоны",        desc: "iPhone 14–17, Samsung Galaxy",   gradient: "135deg, #1a1a2e 0%, #16213e 100%",  image: "/src/images/iphone17.png" as string | null, glowColor: "rgba(99,102,241,0.3)",   blend: "screen" as const, emoji: "📱" },
-  { slug: "macbook",     name: "Ноутбуки",          desc: "MacBook Air и Pro 2025",         gradient: "135deg, #0d1b2a 0%, #1b2838 100%",  image: "/src/images/macbook.png" as string | null,  glowColor: "rgba(99,102,241,0.25)",  blend: "screen" as const, emoji: "💻" },
-  { slug: "gaming",      name: "Консоли",           desc: "PlayStation 5, Xbox Series",     gradient: "135deg, #1a0a1a 0%, #2a1535 100%",  image: "/src/images/Sony PS5.png" as string | null, glowColor: "rgba(139,92,246,0.3)",   blend: "normal" as const, emoji: "🎮" },
+  { slug: "iphone",      name: "Смартфоны",        desc: "iPhone 14–17, Samsung Galaxy",   gradient: "135deg, #1a1a2e 0%, #16213e 100%",  image: "/images/iphone17.png" as string | null, glowColor: "rgba(99,102,241,0.3)",   blend: "screen" as const, emoji: "📱" },
+  { slug: "macbook",     name: "Ноутбуки",          desc: "MacBook Air и Pro 2025",         gradient: "135deg, #0d1b2a 0%, #1b2838 100%",  image: "/images/macbook.png" as string | null,  glowColor: "rgba(99,102,241,0.25)",  blend: "screen" as const, emoji: "💻" },
+  { slug: "gaming",      name: "Консоли",           desc: "PlayStation 5, Xbox Series",     gradient: "135deg, #1a0a1a 0%, #2a1535 100%",  image: "/images/Sony PS5.png" as string | null, glowColor: "rgba(139,92,246,0.3)",   blend: "normal" as const, emoji: "🎮" },
   // Row 2 — бренды
-  { slug: "dji",         name: "DJI",               desc: "Дроны, камеры, микрофоны",       gradient: "135deg, #1a0a0a 0%, #2d1515 100%",  image: "/src/images/DJI_Mavic_4.png" as string | null, glowColor: "rgba(239,68,68,0.25)", blend: "normal" as const, emoji: "🚁" },
-  { slug: "rayban",      name: "Ray-Ban",            desc: "Умные очки с AI",                gradient: "135deg, #0a0f1a 0%, #151e2d 100%",  image: "/src/images/ray-ban.png" as string | null,  glowColor: "rgba(99,102,241,0.2)",   blend: "normal" as const, emoji: "🕶️" },
-  { slug: "whoop",       name: "WHOOP",              desc: "Биометрика 24/7",                gradient: "135deg, #0a1a10 0%, #0d2d1a 100%",  image: "/src/images/whoop.png" as string | null,    glowColor: "rgba(34,197,94,0.25)",   blend: "normal" as const, emoji: "💚" },
+  { slug: "dji",         name: "DJI",               desc: "Дроны, камеры, микрофоны",       gradient: "135deg, #1a0a0a 0%, #2d1515 100%",  image: "/images/DJI_Mavic_4.png" as string | null, glowColor: "rgba(239,68,68,0.25)", blend: "normal" as const, emoji: "🚁" },
+  { slug: "rayban",      name: "Ray-Ban",            desc: "Умные очки с AI",                gradient: "135deg, #0a0f1a 0%, #151e2d 100%",  image: "/images/ray-ban.png" as string | null,  glowColor: "rgba(99,102,241,0.2)",   blend: "normal" as const, emoji: "🕶️" },
+  { slug: "whoop",       name: "WHOOP",              desc: "Биометрика 24/7",                gradient: "135deg, #0a1a10 0%, #0d2d1a 100%",  image: "/images/whoop.png" as string | null,    glowColor: "rgba(34,197,94,0.25)",   blend: "normal" as const, emoji: "💚" },
   // Row 3 — остальные бренды
-  { slug: "yandex",      name: "Яндекс",             desc: "Станция 2, Станция Макс",        gradient: "135deg, #0a0f1a 0%, #0d1520 100%",  image: "/src/images/yandex.png" as string | null,   glowColor: "rgba(252,56,56,0.25)",   blend: "normal" as const, emoji: "🔴" },
-  { slug: "dyson",       name: "Dyson",              desc: "Умная техника для дома",         gradient: "135deg, #1a0f0a 0%, #2d1f15 100%",  image: "/src/images/dyson.png" as string | null,    glowColor: "rgba(234,88,12,0.25)",   blend: "normal" as const, emoji: "🌀" },
-  { slug: "plaud-brand", name: "Plaud",              desc: "AI-диктофоны нового поколения",  gradient: "135deg, #1a1a0a 0%, #2d2d15 100%",  image: "/src/images/plaude.png" as string | null,   glowColor: "rgba(234,179,8,0.2)",    blend: "normal" as const, emoji: "🎙️" },
+  { slug: "yandex",      name: "Яндекс",             desc: "Станция 2, Станция Макс",        gradient: "135deg, #0a0f1a 0%, #0d1520 100%",  image: "/images/yandex.png" as string | null,   glowColor: "rgba(252,56,56,0.25)",   blend: "normal" as const, emoji: "🔴" },
+  { slug: "dyson",       name: "Dyson",              desc: "Умная техника для дома",         gradient: "135deg, #1a0f0a 0%, #2d1f15 100%",  image: "/images/dyson.png" as string | null,    glowColor: "rgba(234,88,12,0.25)",   blend: "normal" as const, emoji: "🌀" },
+  { slug: "plaud-brand", name: "Plaud",              desc: "AI-диктофоны нового поколения",  gradient: "135deg, #1a1a0a 0%, #2d2d15 100%",  image: "/images/plaude.png" as string | null,   glowColor: "rgba(234,179,8,0.2)",    blend: "normal" as const, emoji: "🎙️" },
 ];
 
 function CategoryShowcase() {
