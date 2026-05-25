@@ -1,3 +1,9 @@
+export interface ProductSpec {
+  icon: string;
+  label: string;
+  value: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -6,6 +12,12 @@ export interface Product {
   price: number;
   oldPrice: number | null;
   imageUrl: string | null;
+  specs: string | null;
+  reviews: string | null;
+  clicks: number;
+  clicksMonth: number;
+  reviewCount: number;
+  rating: number;
   isFeatured: boolean;
   isPublished: boolean;
   categoryId: string;

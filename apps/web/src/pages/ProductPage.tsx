@@ -2,33 +2,422 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getProductBySlug, type ProductWithRelations } from "../shared/api/product";
 
+const API = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
+
 const formatRub = (n: number) => n.toLocaleString("ru-RU") + " ₽";
 
 const CATEGORY_LABEL: Record<string, string> = {
-  iphone: "iPhone", macbook: "MacBook", airpods: "AirPods",
-  watches: "Apple Watch", vision: "Apple Vision", dji: "DJI",
-  "smart-glasses": "Ray-Ban", fitness: "WHOOP", dictaphones: "Plaud", headphones: "Beats",
+  iphone: "Смартфоны", macbook: "Ноутбуки", airpods: "Наушники",
+  watches: "Носимые", vision: "VR / AR", gaming: "Консоли",
+  dji: "DJI", cameras: "Камеры DJI", microphones: "Микрофоны",
+  rayban: "Ray-Ban", whoop: "WHOOP", garmin: "Garmin",
+  dyson: "Dyson", yandex: "Яндекс", "plaud-brand": "Plaud",
+  "smart-glasses": "Умные очки", dictaphones: "AI-гаджеты",
 };
 
-const SPECS: Record<string, { icon: string; label: string; value: string }[]> = {
-  iphone:        [{ icon: "🔋", label: "Батарея", value: "До 29 часов" }, { icon: "📸", label: "Камера", value: "48 Мп, 5× зум" }, { icon: "⚡", label: "Чип", value: "A18 Pro" }, { icon: "💾", label: "Хранилище", value: "256 / 512 GB" }],
-  macbook:       [{ icon: "🔋", label: "Батарея", value: "До 18 часов" }, { icon: "⚡", label: "Чип", value: "Apple M4" }, { icon: "💾", label: "Память", value: "16 GB Unified" }, { icon: "🖥️", label: "Дисплей", value: "Liquid Retina" }],
-  airpods:       [{ icon: "🎵", label: "Звук", value: "Пространственный" }, { icon: "🔇", label: "Шум", value: "Активное ANC" }, { icon: "🔋", label: "Батарея", value: "До 30 ч с кейсом" }, { icon: "⚡", label: "Чип", value: "H2" }],
-  watches:       [{ icon: "❤️", label: "Здоровье", value: "ЧСС, ЭКГ, SpO2" }, { icon: "📍", label: "GPS", value: "Точный L1/L5" }, { icon: "🔋", label: "Батарея", value: "До 36 часов" }, { icon: "💧", label: "Защита", value: "WR50" }],
-  vision:        [{ icon: "🥽", label: "Дисплей", value: "micro-OLED 4K" }, { icon: "🧠", label: "Чипы", value: "M2 + R1" }, { icon: "👆", label: "Управление", value: "Взглядом и руками" }, { icon: "📦", label: "Память", value: "256 GB" }],
-  dji:           [{ icon: "🛸", label: "Дальность", value: "До 20 км" }, { icon: "📸", label: "Видео", value: "4K 120fps" }, { icon: "⏱️", label: "Полёт", value: "45 минут" }, { icon: "🎯", label: "Стабил.", value: "3-осевой" }],
-  "smart-glasses": [{ icon: "📸", label: "Камера", value: "12 Мп" }, { icon: "🤖", label: "AI", value: "Meta AI" }, { icon: "🔊", label: "Звук", value: "Открытые динамики" }, { icon: "🔋", label: "Батарея", value: "До 6 часов" }],
-  fitness:       [{ icon: "❤️", label: "ЧСС", value: "24/7 мониторинг" }, { icon: "💤", label: "Сон", value: "Анализ фаз" }, { icon: "📊", label: "HRV", value: "Стресс и восст." }, { icon: "🔋", label: "Батарея", value: "До 5 дней" }],
-  dictaphones:   [{ icon: "🎙️", label: "Запись", value: "30 часов" }, { icon: "🌍", label: "Языки", value: "59 языков" }, { icon: "📝", label: "Саммари", value: "Встречи и лекции" }, { icon: "🔋", label: "Батарея", value: "До 20 часов" }],
-  headphones:    [{ icon: "🔇", label: "ANC", value: "Активное" }, { icon: "🎵", label: "Звук", value: "Hi-Fi" }, { icon: "🔋", label: "Батарея", value: "До 40 часов" }, { icon: "📱", label: "Совм.", value: "iOS и Android" }],
+
+
+const PRODUCT_VARIANTS: Record<string, {
+  colors?: { name: string; hex: string }[];
+  storage?: string[];
+}> = {
+  // ── iPhone 17 Pro Max ──────────────────────────────────────────────────────
+  "iphone-17-pro-max-256": {
+    colors: [
+      { name: "Cosmic Orange", hex: "#C84B2F" },
+      { name: "Deep Blue",     hex: "#1B2B4B" },
+      { name: "Silver",        hex: "#E8E8E8" },
+    ],
+    storage: ["256GB", "512GB", "1TB"],
+  },
+  "iphone-17-pro-max-512": {
+    colors: [
+      { name: "Cosmic Orange", hex: "#C84B2F" },
+      { name: "Deep Blue",     hex: "#1B2B4B" },
+      { name: "Silver",        hex: "#E8E8E8" },
+    ],
+    storage: ["256GB", "512GB", "1TB"],
+  },
+  // ── iPhone 17 Pro ──────────────────────────────────────────────────────────
+  "iphone-17-pro-256": {
+    colors: [
+      { name: "Cosmic Orange", hex: "#C84B2F" },
+      { name: "Deep Blue",     hex: "#1B2B4B" },
+      { name: "Silver",        hex: "#E8E8E8" },
+    ],
+    storage: ["256GB", "512GB", "1TB"],
+  },
+  "iphone-17-pro-512": {
+    colors: [
+      { name: "Cosmic Orange", hex: "#C84B2F" },
+      { name: "Deep Blue",     hex: "#1B2B4B" },
+      { name: "Silver",        hex: "#E8E8E8" },
+    ],
+    storage: ["256GB", "512GB", "1TB"],
+  },
+  // ── iPhone 17 ─────────────────────────────────────────────────────────────
+  "iphone-17-128": {
+    colors: [
+      { name: "Black",     hex: "#1C1C1E" },
+      { name: "White",     hex: "#F5F5F0" },
+      { name: "Lavender",  hex: "#C8B8D8" },
+      { name: "Mist Blue", hex: "#8EB4C8" },
+      { name: "Sage",      hex: "#8FA88A" },
+    ],
+    storage: ["128GB", "256GB", "512GB"],
+  },
+  "iphone-17-256": {
+    colors: [
+      { name: "Black",     hex: "#1C1C1E" },
+      { name: "White",     hex: "#F5F5F0" },
+      { name: "Lavender",  hex: "#C8B8D8" },
+      { name: "Mist Blue", hex: "#8EB4C8" },
+      { name: "Sage",      hex: "#8FA88A" },
+    ],
+    storage: ["128GB", "256GB", "512GB"],
+  },
+  // ── iPhone 16 Pro Max ─────────────────────────────────────────────────────
+  "iphone-16-pro-max-256": {
+    colors: [
+      { name: "Desert Titanium", hex: "#C8A882" },
+      { name: "Natural Titanium", hex: "#E3DDD4" },
+      { name: "White Titanium", hex: "#F5F5F0" },
+      { name: "Black Titanium", hex: "#2C2C2E" },
+    ],
+    storage: ["256GB", "512GB", "1TB"],
+  },
+  // ── iPhone 16 Pro ─────────────────────────────────────────────────────────
+  "iphone-16-pro-256": {
+    colors: [
+      { name: "Desert Titanium", hex: "#C8A882" },
+      { name: "Natural Titanium", hex: "#E3DDD4" },
+      { name: "White Titanium", hex: "#F5F5F0" },
+      { name: "Black Titanium", hex: "#2C2C2E" },
+    ],
+    storage: ["128GB", "256GB", "512GB", "1TB"],
+  },
+  // ── iPhone 16 ─────────────────────────────────────────────────────────────
+  "iphone-16-128": {
+    colors: [
+      { name: "Black", hex: "#1C1C1E" },
+      { name: "White", hex: "#F5F5F0" },
+      { name: "Pink", hex: "#F4CEDB" },
+      { name: "Teal", hex: "#5B8A8B" },
+      { name: "Ultramarine", hex: "#4B6CB7" },
+    ],
+    storage: ["128GB", "256GB", "512GB"],
+  },
+  // ── iPhone 15 Pro Max ─────────────────────────────────────────────────────
+  "iphone-15-pro-max-256": {
+    colors: [
+      { name: "Natural Titanium", hex: "#E3DDD4" },
+      { name: "Blue Titanium", hex: "#4E6E8E" },
+      { name: "White Titanium", hex: "#F5F5F0" },
+      { name: "Black Titanium", hex: "#2C2C2E" },
+    ],
+    storage: ["256GB", "512GB", "1TB"],
+  },
+  // ── iPhone 15 Pro ─────────────────────────────────────────────────────────
+  "iphone-15-pro-256": {
+    colors: [
+      { name: "Natural Titanium", hex: "#E3DDD4" },
+      { name: "Blue Titanium", hex: "#4E6E8E" },
+      { name: "White Titanium", hex: "#F5F5F0" },
+      { name: "Black Titanium", hex: "#2C2C2E" },
+    ],
+    storage: ["128GB", "256GB", "512GB"],
+  },
+  // ── iPhone 15 ─────────────────────────────────────────────────────────────
+  "iphone-15-128": {
+    colors: [
+      { name: "Black", hex: "#1C1C1E" },
+      { name: "Green", hex: "#C0D5C2" },
+      { name: "Yellow", hex: "#F9E27A" },
+      { name: "Pink", hex: "#F4CEDB" },
+      { name: "Blue", hex: "#A2B8D0" },
+    ],
+    storage: ["128GB", "256GB", "512GB"],
+  },
+  // ── iPhone 14 Pro Max ─────────────────────────────────────────────────────
+  "iphone-14-pro-max-256": {
+    colors: [
+      { name: "Deep Purple", hex: "#4F3660" },
+      { name: "Gold", hex: "#F4E4C1" },
+      { name: "Silver", hex: "#F1F2ED" },
+      { name: "Space Black", hex: "#1C1B1E" },
+    ],
+    storage: ["128GB", "256GB", "512GB", "1TB"],
+  },
+  // ── iPhone 14 ─────────────────────────────────────────────────────────────
+  "iphone-14-128": {
+    colors: [
+      { name: "Midnight", hex: "#1F2024" },
+      { name: "Starlight", hex: "#F2EFE7" },
+      { name: "Blue", hex: "#A2B4C8" },
+      { name: "Purple", hex: "#D3C6E0" },
+      { name: "Product Red", hex: "#BF2E35" },
+      { name: "Yellow", hex: "#FAE7A0" },
+    ],
+    storage: ["128GB", "256GB", "512GB"],
+  },
+  // ── MacBook Air 13 M4 ─────────────────────────────────────────────────────
+  "macbook-air-13-m4-256": {
+    colors: [
+      { name: "Midnight", hex: "#1C2B3A" },
+      { name: "Starlight", hex: "#E8E0D0" },
+      { name: "Sky Blue", hex: "#B8D4E8" },
+      { name: "Silver", hex: "#E0E0E0" },
+    ],
+    storage: ["256GB", "512GB", "1TB"],
+  },
+  "macbook-air-13-m4-512": {
+    colors: [
+      { name: "Midnight", hex: "#1C2B3A" },
+      { name: "Starlight", hex: "#E8E0D0" },
+      { name: "Sky Blue", hex: "#B8D4E8" },
+      { name: "Silver", hex: "#E0E0E0" },
+    ],
+    storage: ["256GB", "512GB", "1TB"],
+  },
+  // ── MacBook Air 15 M4 ─────────────────────────────────────────────────────
+  "macbook-air-15-m4-512": {
+    colors: [
+      { name: "Midnight", hex: "#1C2B3A" },
+      { name: "Starlight", hex: "#E8E0D0" },
+      { name: "Sky Blue", hex: "#B8D4E8" },
+      { name: "Silver", hex: "#E0E0E0" },
+    ],
+    storage: ["512GB", "1TB"],
+  },
+  // ── MacBook Pro 14 M4 ─────────────────────────────────────────────────────
+  "macbook-pro-14-m4-512": {
+    colors: [
+      { name: "Space Black", hex: "#1C1C1E" },
+      { name: "Silver", hex: "#E0E0E0" },
+    ],
+    storage: ["512GB", "1TB", "2TB"],
+  },
+  "macbook-pro-14-m4-pro-512": {
+    colors: [
+      { name: "Space Black", hex: "#1C1C1E" },
+      { name: "Silver", hex: "#E0E0E0" },
+    ],
+    storage: ["512GB", "1TB", "2TB"],
+  },
+  // ── MacBook Pro 16 M4 Pro ─────────────────────────────────────────────────
+  "macbook-pro-16-m4-pro-512": {
+    colors: [
+      { name: "Space Black", hex: "#1C1C1E" },
+      { name: "Silver", hex: "#E0E0E0" },
+    ],
+    storage: ["512GB", "1TB", "2TB"],
+  },
+  // ── AirPods ───────────────────────────────────────────────────────────────
+  "airpods-pro-2-usb-c": {
+    colors: [
+      { name: "White", hex: "#F5F5F0" },
+    ],
+    storage: undefined,
+  },
+  "airpods-max-usb-c": {
+    colors: [
+      { name: "Midnight", hex: "#1C2B3A" },
+      { name: "Starlight", hex: "#E8E0D0" },
+      { name: "Blue", hex: "#A2B8D0" },
+      { name: "Purple", hex: "#D3C6E0" },
+      { name: "Orange", hex: "#E8845A" },
+    ],
+    storage: undefined,
+  },
+  // ── Samsung Galaxy S26 Ultra ──────────────────────────────────────────────
+  "samsung-galaxy-s26-ultra": {
+    colors: [
+      { name: "Black",  hex: "#1C1C1E" },
+      { name: "White",  hex: "#F5F5F0" },
+      { name: "Blue",   hex: "#B8D4E8" },
+      { name: "Purple", hex: "#4A3B6E" },
+    ],
+    storage: ["256GB", "512GB", "1TB"],
+  },
+  // ── Samsung Galaxy S26+ ───────────────────────────────────────────────────
+  "samsung-galaxy-s26-plus": {
+    colors: [
+      { name: "Black",    hex: "#1C1C1E" },
+      { name: "White",    hex: "#F5F5F0" },
+      { name: "Sky Blue", hex: "#B8D4E8" },
+      { name: "Purple",   hex: "#4A3B6E" },
+    ],
+    storage: ["256GB", "512GB"],
+  },
+  // ── Samsung Galaxy S26 ────────────────────────────────────────────────────
+  "samsung-galaxy-s26": {
+    colors: [
+      { name: "Black",    hex: "#1C1C1E" },
+      { name: "White",    hex: "#F5F5F0" },
+      { name: "Sky Blue", hex: "#B8D4E8" },
+      { name: "Purple",   hex: "#4A3B6E" },
+    ],
+    storage: ["256GB", "512GB"],
+  },
+  // ── Samsung Galaxy S25 Edge ───────────────────────────────────────────────
+  "samsung-galaxy-s25-edge": {
+    colors: [
+      { name: "Titanium Silver", hex: "#E0E0E0" },
+      { name: "Titanium Jetblack", hex: "#1C1C1E" },
+      { name: "Titanium Icyblue", hex: "#B8CFDF" },
+    ],
+    storage: ["256GB", "512GB"],
+  },
+  // ── Samsung Galaxy Z Fold 7 ───────────────────────────────────────────────
+  "samsung-galaxy-z-fold-7": {
+    colors: [
+      { name: "Blue Shadow",   hex: "#4A6FA5" },
+      { name: "Silver Shadow", hex: "#C8C8CC" },
+      { name: "Jet Black",     hex: "#1C1C1E" },
+      { name: "Mint",          hex: "#B5CFC0" },
+    ],
+    storage: ["256GB", "512GB", "1TB"],
+  },
+  // ── Samsung Galaxy Z Flip 7 ───────────────────────────────────────────────
+  "samsung-galaxy-z-flip-7": {
+    colors: [
+      { name: "Blue Shadow", hex: "#4A6FA5" },
+      { name: "Jet Black",   hex: "#1C1C1E" },
+      { name: "Coral Red",   hex: "#E8503A" },
+      { name: "Mint",        hex: "#B5CFC0" },
+    ],
+    storage: ["256GB", "512GB"],
+  },
+  // ── Garmin ────────────────────────────────────────────────────────────────
+  "garmin-fenix-8-solar": {
+    colors: [
+      { name: "Carbon Gray", hex: "#2C2C2E" },
+      { name: "Titanium", hex: "#8E8E93" },
+      { name: "Mineral Blue", hex: "#4A6FA5" },
+    ],
+    storage: undefined,
+  },
+  "garmin-fenix-8": {
+    colors: [
+      { name: "Carbon Gray", hex: "#2C2C2E" },
+      { name: "Titanium", hex: "#8E8E93" },
+      { name: "Sapphire Carbon Gray", hex: "#1C1C1E" },
+    ],
+    storage: undefined,
+  },
+  "garmin-forerunner-965": {
+    colors: [
+      { name: "Carbon Gray", hex: "#2C2C2E" },
+      { name: "White", hex: "#F5F5F0" },
+    ],
+    storage: undefined,
+  },
+  "garmin-epix-pro-gen-2": {
+    colors: [
+      { name: "Carbon Gray", hex: "#2C2C2E" },
+      { name: "Titanium", hex: "#8E8E93" },
+    ],
+    storage: undefined,
+  },
 };
 
-const REVIEWS_BY_CAT: Record<string, { name: string; city: string; text: string }[]> = {
-  iphone:   [{ name: "Алексей М.", city: "Москва",         text: "Камера просто нереальная — снимает в темноте лучше чем ожидал. Пришёл за 3 часа." }, { name: "Юлия К.",    city: "Санкт-Петербург", text: "Упаковка запечатана, всё оригинальное. Менеджер ответил моментально." }, { name: "Дмитрий Р.", city: "Казань",           text: "Лучший iPhone что у меня был. Рекомендую всем без раздумий!" }],
-  macbook:  [{ name: "Иван П.",    city: "Москва",          text: "M4 просто летает. Финальный кат в DaVinci Resolve — за минуты." }, { name: "Светлана Л.", city: "Новосибирск",   text: "18 часов батарея — правда! Весь рабочий день без зарядки." }, { name: "Артём С.",   city: "Екатеринбург",   text: "Красивый, тонкий, мощный. Стоит каждой копейки." }],
-  dji:      [{ name: "Павел Н.",   city: "Москва",          text: "Снимки с воздуха — просто кино. Стабилизация идеальная." }, { name: "Кирилл В.", city: "Сочи",            text: "Дальность 20 км — это реально. Тест провёл лично." }, { name: "Наталья Ф.", city: "Краснодар",     text: "Менеджер помог с регистрацией дрона. Всё официально." }],
-  default:  [{ name: "Анна С.",    city: "Москва",          text: "Отличный товар, доставка в тот же день. Всё оригинальное." }, { name: "Роман К.",  city: "Москва",          text: "Цена лучше чем в официальном магазине. Рекомендую!" }, { name: "Ольга Д.",  city: "Санкт-Петербург", text: "Быстро, надёжно, с гарантией. Третий раз беру тут." }],
+function getVariants(slug: string) {
+  if (PRODUCT_VARIANTS[slug]) return PRODUCT_VARIANTS[slug];
+  const key = Object.keys(PRODUCT_VARIANTS).find(k => slug.startsWith(k));
+  return key ? PRODUCT_VARIANTS[key] : null;
+}
+
+const STORAGE_PRICES: Record<string, Record<string, number>> = {
+  "iphone-17-pro-max-256":     { "256GB": 119900, "512GB": 134900, "1TB": 154900 },
+  "iphone-17-pro-max-512":     { "256GB": 119900, "512GB": 134900, "1TB": 154900 },
+  "iphone-17-pro-256":         { "256GB": 104900, "512GB": 119900, "1TB": 139900 },
+  "iphone-17-pro-512":         { "256GB": 104900, "512GB": 119900, "1TB": 139900 },
+  "iphone-17-128":             { "128GB":  84900, "256GB":  94900, "512GB": 114900 },
+  "iphone-17-256":             { "128GB":  84900, "256GB":  94900, "512GB": 114900 },
+  "iphone-16-pro-max-256":     { "256GB":  99900, "512GB": 114900, "1TB": 134900 },
+  "iphone-16-pro-256":         { "256GB":  89900, "512GB": 104900, "1TB": 124900 },
+  "iphone-16-128":             { "128GB":  74900, "256GB":  84900, "512GB": 104900 },
+  "iphone-15-pro-max-256":     { "256GB":  84900, "512GB":  99900, "1TB": 119900 },
+  "iphone-15-pro-256":         { "256GB":  74900, "512GB":  89900, "1TB": 109900 },
+  "iphone-15-128":             { "128GB":  64900, "256GB":  74900, "512GB":  94900 },
+  "iphone-14-pro-max-256":     { "256GB":  69900, "512GB":  84900, "1TB":  99900 },
+  "iphone-14-128":             { "128GB":  54900, "256GB":  64900, "512GB":  74900 },
+  "macbook-air-13-m4-256":     { "256GB": 109900, "512GB": 124900, "1TB": 149900 },
+  "macbook-air-13-m4-512":     { "256GB": 109900, "512GB": 124900, "1TB": 149900 },
+  "macbook-air-15-m4-512":     { "512GB": 139900, "1TB": 159900 },
+  "macbook-pro-14-m4-512":     { "512GB": 179900, "1TB": 209900, "2TB": 249900 },
+  "macbook-pro-14-m4-pro-512": { "512GB": 219900, "1TB": 249900, "2TB": 289900 },
+  "macbook-pro-16-m4-pro-512": { "512GB": 259900, "1TB": 289900, "2TB": 329900 },
+  "samsung-galaxy-s26-ultra":  { "256GB": 129900, "512GB": 149900, "1TB": 174900 },
+  "samsung-galaxy-s26-plus":   { "256GB": 109900, "512GB": 129900 },
+  "samsung-galaxy-s26":        { "256GB":  89900, "512GB": 109900 },
+  "samsung-galaxy-s25-edge":   { "256GB": 109900, "512GB": 129900 },
+  "samsung-galaxy-z-fold-7":   { "256GB": 179900, "512GB": 209900, "1TB": 249900 },
+  "samsung-galaxy-z-flip-7":   { "256GB": 119900, "512GB": 139900 },
 };
+
+const COLOR_FOLDER: Record<string, string> = {
+  "iphone-17-pro-max-256": "iphone-17-pro-max",
+  "iphone-17-pro-max-512": "iphone-17-pro-max",
+  "iphone-17-pro-256":     "iphone-17-pro",
+  "iphone-17-pro-512":     "iphone-17-pro",
+  "iphone-17-128":         "iphone-17",
+  "iphone-17-256":         "iphone-17",
+  "iphone-16-pro-max-256": "iphone-16-pro-max",
+  "iphone-16-pro-256":     "iphone-16-pro",
+  "iphone-16-128":         "iphone-16",
+  "iphone-15-pro-max-256": "iphone-15-pro-max",
+  "iphone-15-pro-256":     "iphone-15-pro",
+  "iphone-15-128":         "iphone-15",
+  "iphone-14-pro-max-256": "iphone-14-pro-max",
+  "iphone-14-128":         "iphone-14",
+  "macbook-air-13-m4-256": "macbook-air-13-m4",
+  "macbook-air-13-m4-512": "macbook-air-13-m4",
+  "macbook-air-15-m4-512": "macbook-air-15-m4",
+  "macbook-pro-14-m4-512":     "macbook-pro-14-m4",
+  "macbook-pro-14-m4-pro-512": "macbook-pro-14-m4",
+  "macbook-pro-16-m4-pro-512": "macbook-pro-16-m4",
+  "samsung-galaxy-s26-ultra":  "samsung-galaxy-s26-ultra",
+  "samsung-galaxy-s26-plus":   "samsung-galaxy-s26-plus",
+  "samsung-galaxy-s26":        "samsung-galaxy-s26",
+  "samsung-galaxy-s25-edge":   "samsung-galaxy-s25-edge",
+  "samsung-galaxy-z-fold-7":   "samsung-galaxy-z-fold-7",
+  "samsung-galaxy-z-flip-7":   "samsung-galaxy-z-flip-7",
+  "airpods-max-usb-c":         "airpods-max",
+};
+
+const COLOR_FILE_OVERRIDES: Record<string, Record<string, string>> = {
+  "samsung-galaxy-s26": {
+    "Black":    "s26black-removebg-preview",
+    "White":    "s26white-removebg-preview",
+    "Sky Blue": "sky-blue",
+    "Purple":   "s26purple-removebg-preview",
+  },
+  "samsung-galaxy-s26-plus": {
+    "Black":    "s26black-removebg-preview",
+    "White":    "s26white-removebg-preview",
+    "Sky Blue": "sky-blue",
+    "Purple":   "s26purple-removebg-preview",
+  },
+  "samsung-galaxy-z-fold-7": {
+    "Jet Black":     "black",
+    "Blue Shadow":   "blue",
+    "Silver Shadow": "silver",
+  },
+  "samsung-galaxy-z-flip-7": {
+    "Jet Black":   "black-removebg-preview",
+    "Blue Shadow": "blue-removebg-preview",
+    "Coral Red":   "red-removebg-preview",
+  },
+};
+
+function getColorImage(slug: string, colorName: string): string | null {
+  const folder = COLOR_FOLDER[slug];
+  if (!folder) return null;
+  const override = COLOR_FILE_OVERRIDES[slug]?.[colorName];
+  const filename = override ?? colorName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+  return `/src/images/${folder}/${filename}.png`;
+}
 
 export function ProductPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -39,11 +428,29 @@ export function ProductPage() {
   const [stickyVisible, setStickyVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<"desc" | "specs" | "reviews">("desc");
   const [imgZoomed, setImgZoomed] = useState(false);
+  const [selectedColor, setSelectedColor] = useState(0);
+  const [selectedStorage, setSelectedStorage] = useState(0);
+  const [currentImage, setCurrentImage] = useState<string | null>(null);
+  const [imgOpacity, setImgOpacity] = useState(1);
   const ctaRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!slug) return;
+
+    const key = `clicked_${slug}`;
+
+    // Only fire once per browser session per product
+    if (!sessionStorage.getItem(key)) {
+      fetch(`${API}/api/products/${slug}/click`, { method: "POST" })
+        .catch(() => null);
+      sessionStorage.setItem(key, "1");
+    }
+  }, [slug]);
+
+  useEffect(() => {
+    if (!slug) return;
     setLoading(true); setNotFound(false);
+    setSelectedColor(0); setSelectedStorage(0);
     getProductBySlug(slug)
       .then(p => { setProduct(p); setLoading(false); document.title = `${p.name} — ABC Store`; })
       .catch(() => { setNotFound(true); setLoading(false); });
@@ -52,11 +459,30 @@ export function ProductPage() {
 
   useEffect(() => {
     if (!product) return;
+    setCurrentImage(product.imageUrl ?? null);
     try {
       const cart = JSON.parse(localStorage.getItem("cart") ?? "[]");
       setAdded(cart.some((i: { product: { id: string } }) => i.product.id === product.id));
     } catch { /* ignore */ }
   }, [product]);
+
+  const handleColorSelect = (colorIndex: number) => {
+    setSelectedColor(colorIndex);
+    if (!variants?.colors || !slug) return;
+    const colorName = variants.colors[colorIndex].name;
+    const colorImage = getColorImage(slug, colorName);
+    if (colorImage) {
+      const img = new Image();
+      img.onload = () => {
+        setImgOpacity(0);
+        setTimeout(() => { setCurrentImage(colorImage); setImgOpacity(1); }, 150);
+      };
+      img.onerror = () => {
+        console.log(`Color image not found: ${colorImage}`);
+      };
+      img.src = colorImage;
+    }
+  };
 
   useEffect(() => {
     const el = ctaRef.current;
@@ -82,10 +508,21 @@ export function ProductPage() {
 
   const hasDiscount = product?.oldPrice != null && product.oldPrice > product.price;
   const discount = hasDiscount ? Math.round(((product!.oldPrice! - product!.price) / product!.oldPrice!) * 100) : null;
-  const savings = hasDiscount ? product!.oldPrice! - product!.price : 0;
-  const specs = product ? (SPECS[product.category.slug] ?? SPECS.iphone) : [];
-  const reviews = product ? (REVIEWS_BY_CAT[product.category.slug] ?? REVIEWS_BY_CAT.default) : [];
+  const rawSpecs = product?.specs;
+  const specsData: Array<{ icon: string; label: string; value: string }> = rawSpecs ? JSON.parse(rawSpecs) : [];
+  const rawReviews = product?.reviews;
+  const reviewsData: Array<{ name: string; city: string; stars: number; text: string }> = rawReviews ? JSON.parse(rawReviews) : [];
   const catLabel = product ? (CATEGORY_LABEL[product.category.slug] ?? product.category.name) : "";
+  const variants = getVariants(slug ?? "");
+  const storageOptions = variants?.storage ?? [];
+  const selectedStorageKey = storageOptions[selectedStorage] ?? "";
+  const exactPrices = slug ? STORAGE_PRICES[slug] : null;
+  const displayPrice = exactPrices && selectedStorageKey
+    ? (exactPrices[selectedStorageKey] ?? (product?.price ?? 0))
+    : (product?.price ?? 0);
+  const displayOldPrice = selectedStorage === 0 && product?.oldPrice
+    ? product.oldPrice
+    : null;
 
   return (
     <>
@@ -134,11 +571,11 @@ export function ProductPage() {
               <div className="pp-layout">
                 {/* LEFT: Image */}
                 <div>
-                  <div style={{ background: "#f5f5f7", borderRadius: 24, padding: 48, display: "flex", alignItems: "center", justifyContent: "center", minHeight: 480, position: "relative", overflow: "hidden", cursor: "zoom-in" }}
+                  <div style={{ background: "#0f0f14", borderRadius: 24, padding: 48, display: "flex", alignItems: "center", justifyContent: "center", minHeight: 480, position: "relative", overflow: "hidden", cursor: "zoom-in" }}
                     onClick={() => setImgZoomed(z => !z)}>
-                    {product.imageUrl
-                      ? <img src={product.imageUrl} alt={product.name} className="pp-img"
-                          style={{ width: "100%", maxHeight: 440, objectFit: "contain", transform: imgZoomed ? "scale(1.15)" : "scale(1)" }} />
+                    {(currentImage ?? product.imageUrl)
+                      ? <img src={currentImage ?? product.imageUrl ?? ""} alt={product.name} className="pp-img"
+                          style={{ width: "100%", maxHeight: 440, objectFit: "contain", transform: imgZoomed ? "scale(1.15)" : "scale(1)", mixBlendMode: "screen", filter: "brightness(1.1)", opacity: imgOpacity, transition: "opacity 0.3s ease" }} />
                       : <div style={{ fontSize: 80, opacity: 0.2 }}>📦</div>
                     }
                     {discount && (
@@ -164,40 +601,103 @@ export function ProductPage() {
 
                   {/* Stars */}
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ color: "#f59e0b", fontSize: 16, letterSpacing: 2 }}>★★★★★</span>
-                    <span style={{ fontSize: 13, color: "var(--muted)" }}>5.0 (128 отзывов)</span>
+                    <span style={{ color: "#f59e0b", fontSize: 16, letterSpacing: 2 }}>
+                      {"★".repeat(Math.floor(product.rating ?? 5))}{"☆".repeat(5 - Math.floor(product.rating ?? 5))}
+                    </span>
+                    <span style={{ fontSize: 13, color: "var(--muted)" }}>
+                      {(product.rating ?? 5.0).toFixed(1)} ({(product.reviewCount ?? 0).toLocaleString("ru-RU")} отзывов)
+                    </span>
                   </div>
 
                   {/* Price block */}
                   <div style={{ background: "var(--card-bg)", borderRadius: 14, padding: "18px 20px", border: "1px solid var(--border)" }}>
                     <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-                      <span style={{ fontSize: 40, fontWeight: 900, letterSpacing: "-0.03em" }}>{formatRub(product.price)}</span>
-                      {product.oldPrice && (
-                        <span style={{ fontSize: 20, color: "var(--muted)", textDecoration: "line-through" }}>{formatRub(product.oldPrice)}</span>
+                      <span style={{ fontSize: 40, fontWeight: 900, letterSpacing: "-0.03em" }}>{displayPrice.toLocaleString("ru-RU") + " ₽"}</span>
+                      {displayOldPrice && (
+                        <span style={{ fontSize: 20, color: "var(--muted)", textDecoration: "line-through" }}>{displayOldPrice.toLocaleString("ru-RU") + " ₽"}</span>
                       )}
                     </div>
-                    {discount && (
+                    {displayOldPrice && displayOldPrice > displayPrice && (
                       <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 8 }}>
-                        <span style={{ background: "#ef4444", color: "#fff", padding: "2px 10px", borderRadius: 6, fontSize: 12, fontWeight: 700 }}>-{discount}%</span>
-                        <span style={{ fontSize: 13, color: "#22c55e", fontWeight: 600 }}>Вы экономите {formatRub(savings)}</span>
+                        <span style={{ background: "#ef4444", color: "#fff", padding: "2px 10px", borderRadius: 6, fontSize: 12, fontWeight: 700 }}>
+                          -{Math.round(((displayOldPrice - displayPrice) / displayOldPrice) * 100)}%
+                        </span>
+                        <span style={{ fontSize: 13, color: "#22c55e", fontWeight: 600 }}>
+                          Вы экономите {(displayOldPrice - displayPrice).toLocaleString("ru-RU") + " ₽"}
+                        </span>
                       </div>
                     )}
                   </div>
 
                   <hr style={{ border: "none", borderTop: "1px solid var(--border)", margin: "0" }} />
 
-                  {/* Key specs */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                    {specs.map(s => (
-                      <div key={s.label} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}>
-                        <span style={{ fontSize: 18 }}>{s.icon}</span>
-                        <div>
-                          <div style={{ color: "var(--muted)", fontSize: 11 }}>{s.label}</div>
-                          <div style={{ fontWeight: 600 }}>{s.value}</div>
-                        </div>
+                  {/* Color selector */}
+                  {variants?.colors && (
+                    <div>
+                      <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 10 }}>
+                        Цвет: <span style={{ color: "var(--text)", fontWeight: 600 }}>{variants.colors[selectedColor].name}</span>
                       </div>
-                    ))}
-                  </div>
+                      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+                        {variants.colors.map((color, idx) => (
+                          <button
+                            key={color.name}
+                            onClick={() => handleColorSelect(idx)}
+                            title={color.name}
+                            style={{
+                              width: 28, height: 28, borderRadius: "50%",
+                              background: color.hex, cursor: "pointer",
+                              border: idx === selectedColor ? "2px solid white" : "2px solid transparent",
+                              boxShadow: idx === selectedColor ? "0 0 0 2px var(--accent)" : "none",
+                              transform: idx === selectedColor ? "scale(1.1)" : "scale(1)",
+                              transition: "all 0.15s",
+                              flexShrink: 0,
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Storage selector */}
+                  {variants?.storage && (
+                    <div>
+                      <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 10 }}>Память</div>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
+                        {variants.storage.map((size, idx) => (
+                          <button
+                            key={size}
+                            onClick={() => setSelectedStorage(idx)}
+                            style={{
+                              padding: "7px 16px", borderRadius: 8,
+                              fontSize: 13,
+                              fontWeight: idx === selectedStorage ? 700 : 500,
+                              cursor: "pointer", transition: "all 0.15s",
+                              background: idx === selectedStorage ? "var(--accent)" : "transparent",
+                              border: idx === selectedStorage ? "1px solid var(--accent)" : "1px solid rgba(255,255,255,0.12)",
+                              color: idx === selectedStorage ? "white" : "var(--text)",
+                            }}
+                          >
+                            {size}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Key specs */}
+                  {specsData.length > 0 && (
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                      {specsData.slice(0, 4).map(s => (
+                        <div key={s.label} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}>
+                          <span style={{ fontSize: 18 }}>{s.icon}</span>
+                          <div>
+                            <div style={{ color: "var(--muted)", fontSize: 11 }}>{s.label}</div>
+                            <div style={{ fontWeight: 600 }}>{s.value}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   {/* CTA */}
                   <button ref={ctaRef} onClick={handleAddToCart} style={{ height: 56, borderRadius: 14, border: "none", background: added ? "#22c55e" : "var(--accent)", color: "#fff", fontSize: 16, fontWeight: 800, cursor: "pointer", transition: "background 0.2s, transform 0.15s" }}
@@ -242,41 +742,38 @@ export function ProductPage() {
 
                 {activeTab === "specs" && (
                   <div style={{ maxWidth: 600 }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
-                      <tbody>
-                        {specs.map(s => (
-                          <tr key={s.label} style={{ borderBottom: "1px solid var(--border)" }}>
-                            <td style={{ padding: "12px 0", color: "var(--muted)", width: "40%" }}>{s.icon} {s.label}</td>
-                            <td style={{ padding: "12px 0", fontWeight: 600 }}>{s.value}</td>
-                          </tr>
+                    {specsData.length > 0 ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                        {specsData.map((spec, i) => (
+                          <div key={i} style={{ display: "flex", alignItems: "center", padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.06)", gap: 12 }}>
+                            <span style={{ fontSize: 18, width: 28, textAlign: "center", flexShrink: 0 }}>{spec.icon}</span>
+                            <span style={{ fontSize: 13, color: "var(--muted)", width: 140, flexShrink: 0 }}>{spec.label}</span>
+                            <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>{spec.value}</span>
+                          </div>
                         ))}
-                        <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                          <td style={{ padding: "12px 0", color: "var(--muted)" }}>✓ Гарантия</td>
-                          <td style={{ padding: "12px 0", fontWeight: 600 }}>1 год официальная</td>
-                        </tr>
-                        <tr>
-                          <td style={{ padding: "12px 0", color: "var(--muted)" }}>📦 Комплектация</td>
-                          <td style={{ padding: "12px 0", fontWeight: 600 }}>Полная оригинальная</td>
-                        </tr>
-                      </tbody>
-                    </table>
+                      </div>
+                    ) : (
+                      <div style={{ color: "var(--muted)", fontSize: 14 }}>Характеристики не указаны</div>
+                    )}
                   </div>
                 )}
 
                 {activeTab === "reviews" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 700 }}>
-                    {reviews.map((r, i) => (
+                    {reviewsData.length > 0 ? reviewsData.map((r, i) => (
                       <div key={i} style={{ background: "var(--card-bg)", border: "1px solid var(--border)", borderRadius: 14, padding: 20 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                           <div>
                             <span style={{ fontWeight: 700, fontSize: 14 }}>{r.name}</span>
                             <span style={{ color: "var(--muted)", fontSize: 12, marginLeft: 8 }}>{r.city}</span>
                           </div>
-                          <span style={{ color: "#f59e0b", letterSpacing: 2 }}>★★★★★</span>
+                          <span style={{ color: "#f59e0b", letterSpacing: 2 }}>{"★".repeat(r.stars)}</span>
                         </div>
                         <p style={{ margin: 0, fontSize: 14, color: "#d0d0d8", lineHeight: 1.7 }}>"{r.text}"</p>
                       </div>
-                    ))}
+                    )) : (
+                      <div style={{ color: "var(--muted)", fontSize: 14 }}>Отзывов пока нет</div>
+                    )}
                   </div>
                 )}
               </div>
@@ -289,7 +786,7 @@ export function ProductPage() {
           <div className="sticky-buy" style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 150, background: "rgba(10,10,15,0.95)", backdropFilter: "blur(16px)", borderTop: "1px solid var(--border)", padding: "12px 24px", display: "flex", alignItems: "center", gap: 16 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 14, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{product.name}</div>
-              <div style={{ fontSize: 18, fontWeight: 800 }}>{formatRub(product.price)}</div>
+              <div style={{ fontSize: 18, fontWeight: 800 }}>{displayPrice.toLocaleString("ru-RU") + " ₽"}</div>
             </div>
             <button onClick={handleAddToCart} style={{ flexShrink: 0, padding: "12px 28px", borderRadius: 12, border: "none", background: added ? "#22c55e" : "var(--accent)", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", transition: "background 0.2s", whiteSpace: "nowrap" }}>
               {added ? "✓ В корзине" : "Добавить в корзину"}

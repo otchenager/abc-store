@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo, useState, Suspense, Component, type ReactNode } from 'react'
+import { useEffect, useRef, useMemo, useState, useCallback, Suspense, Component, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useGLTF, Environment, OrbitControls } from '@react-three/drei'
@@ -138,6 +138,7 @@ function IPhoneModel({ onLoaded }: { onLoaded: () => void }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function HeroSection() {
   const [modelLoaded, setModelLoaded] = useState(false)
+  const handleModelLoaded = useCallback(() => setModelLoaded(true), [])
   return (
     <>
       <style>{CSS}</style>
@@ -329,7 +330,7 @@ export default function HeroSection() {
               <directionalLight position={[0, -3, -5]} intensity={1.8} color="#ffffff" />
               <pointLight position={[-2, 2, 3]} intensity={3} color="#7755ff" />
               <Suspense fallback={null}>
-                <IPhoneModel onLoaded={() => setModelLoaded(true)} />
+                <IPhoneModel onLoaded={handleModelLoaded} />
                 <Environment preset="city" />
               </Suspense>
               <OrbitControls

@@ -23,10 +23,10 @@ function CinematicHero() {
   }, [started, tagline]);
 
   const floaters = [
-    { src: "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-3inch-deserttitanium?wid=300&fmt=png-alpha", top: "12%", left: "6%",  animClass: "float-a", apple: false },
-    { src: "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/macbook-air-13-m4-midnight-select-202503?wid=300&fmt=png-alpha",               top: "8%",  right: "6%", animClass: "float-b", apple: false },
-    { src: "https://abcdemo1.vercel.app/DJI_Mavic_4.png",                                                                      bottom: "15%", left: "8%",  animClass: "float-b", apple: false },
-    { src: "https://abcdemo1.vercel.app/ray-ban.png",                                                                          bottom: "18%", right: "7%", animClass: "float-a", apple: false },
+    { src: "/src/images/iphone17.png", top: "12%", left: "8%",   animClass: "float-a", local: true },
+    { src: "/src/images/applewatchultra.png",  top: "12%",  right: "6%",  animClass: "float-b", local: true },
+    { src: "https://abcdemo1.vercel.app/DJI_Mavic_4.png", bottom: "15%", left: "8%",  animClass: "float-b", local: false },
+    { src: "https://abcdemo1.vercel.app/ray-ban.png",     bottom: "18%", right: "7%", animClass: "float-a", local: false },
   ];
 
   return (
@@ -59,15 +59,16 @@ function CinematicHero() {
 
       {/* Floating images */}
       {floaters.map((f, i) => {
-        const { src, animClass, ...pos } = f as { src: string; animClass: string; apple: boolean; top?: string; bottom?: string; left?: string; right?: string };
+        const { src, animClass, local, ...pos } = f as { src: string; animClass: string; local: boolean; top?: string; bottom?: string; left?: string; right?: string };
         return (
           <div key={i} className={`hero-floater ${animClass}`} style={{
-            position: "absolute", zIndex: 0, background: "transparent",
+            position: "absolute", zIndex: 0, background: "transparent", border: "none",
             ...pos,
           }}>
             <img src={src} alt="" style={{
               width: 160, display: "block",
               filter: "drop-shadow(0 16px 48px rgba(99,102,241,0.45))",
+              ...(local ? { mixBlendMode: "screen" as const } : {}),
             }} />
           </div>
         );
@@ -139,9 +140,15 @@ function CinematicHero() {
 
 // ─── Brand Strip ───────────────────────────────────────────────────────────────
 const BRANDS = [
-  { emoji: "🍎", name: "Apple" }, { emoji: "🚁", name: "DJI" },
-  { emoji: "🕶️", name: "Ray-Ban" }, { emoji: "💚", name: "WHOOP" },
-  { emoji: "🎙️", name: "Plaud" }, { emoji: "🎵", name: "Beats" },
+  { image: "/src/images/11.png", name: "Apple" },
+  { image: "/src/images/djimic2.png", name: "DJI" },
+  { image: "/src/images/ray-ban.png", name: "Ray-Ban" },
+  { image: "/src/images/whoop.png", name: "WHOOP" },
+  { image: "/src/images/plaude.png", name: "Plaud" },
+  { image: "/src/images/Sony PS5.png", name: "Sony" },
+  { image: "/src/images/yandex.png", name: "Yandex" },
+  { image: "/src/images/dyson.png", name: "Dyson" },
+
 ];
 
 function BrandStrip() {
@@ -158,7 +165,7 @@ function BrandStrip() {
       <div style={{ display: "flex", overflow: "hidden" }}>
         <div className="brand-strip">
           {items.map((b, i) => (
-            <span key={i} className="brand-item"><span style={{ fontSize: 22 }}>{b.emoji}</span> {b.name}</span>
+            <span key={i} className="brand-item"><img src={b.image} style={{ height: 32, width: "auto", objectFit: "contain" }} /> {b.name}</span>
           ))}
         </div>
       </div>
@@ -256,51 +263,98 @@ function FeaturedProducts() {
 
 // ─── Category Showcase ────────────────────────────────────────────────────────
 const CATEGORIES = [
-  { slug: "iphone",      name: "iPhone",       emoji: "📱", gradient: "135deg, #1a1a2e 0%, #16213e 100%", desc: "От 14 до 17 серии" },
-  { slug: "macbook",     name: "MacBook",      emoji: "💻", gradient: "135deg, #0d1b2a 0%, #1b2838 100%", desc: "Все модели 2025 года" },
-  { slug: "dji",         name: "DJI",          emoji: "🚁", gradient: "135deg, #1a0a0a 0%, #2d1515 100%", desc: "Дроны и камеры" },
-  { slug: "smart-glasses", name: "Ray-Ban Meta", emoji: "🕶️", gradient: "135deg, #0a1a0a 0%, #152d15 100%", desc: "Умные очки с AI" },
-  { slug: "fitness",     name: "WHOOP",        emoji: "💚", gradient: "135deg, #0a1a10 0%, #0d2d1a 100%", desc: "Биометрика 24/7" },
-  { slug: "dictaphones", name: "Plaud",        emoji: "🎙️", gradient: "135deg, #1a1a0a 0%, #2d2d15 100%", desc: "AI-диктофоны" },
+  // Row 1 — категории
+  { slug: "iphone",      name: "Смартфоны",        desc: "iPhone 14–17, Samsung Galaxy",   gradient: "135deg, #1a1a2e 0%, #16213e 100%",  image: "/src/images/iphone17.png" as string | null, glowColor: "rgba(99,102,241,0.3)",   blend: "screen" as const, emoji: "📱" },
+  { slug: "macbook",     name: "Ноутбуки",          desc: "MacBook Air и Pro 2025",         gradient: "135deg, #0d1b2a 0%, #1b2838 100%",  image: "/src/images/macbook.png" as string | null,  glowColor: "rgba(99,102,241,0.25)",  blend: "screen" as const, emoji: "💻" },
+  { slug: "gaming",      name: "Консоли",           desc: "PlayStation 5, Xbox Series",     gradient: "135deg, #1a0a1a 0%, #2a1535 100%",  image: "/src/images/Sony PS5.png" as string | null, glowColor: "rgba(139,92,246,0.3)",   blend: "normal" as const, emoji: "🎮" },
+  // Row 2 — бренды
+  { slug: "dji",         name: "DJI",               desc: "Дроны, камеры, микрофоны",       gradient: "135deg, #1a0a0a 0%, #2d1515 100%",  image: "/src/images/DJI_Mavic_4.png" as string | null, glowColor: "rgba(239,68,68,0.25)", blend: "normal" as const, emoji: "🚁" },
+  { slug: "rayban",      name: "Ray-Ban",            desc: "Умные очки с AI",                gradient: "135deg, #0a0f1a 0%, #151e2d 100%",  image: "/src/images/ray-ban.png" as string | null,  glowColor: "rgba(99,102,241,0.2)",   blend: "normal" as const, emoji: "🕶️" },
+  { slug: "whoop",       name: "WHOOP",              desc: "Биометрика 24/7",                gradient: "135deg, #0a1a10 0%, #0d2d1a 100%",  image: "/src/images/whoop.png" as string | null,    glowColor: "rgba(34,197,94,0.25)",   blend: "normal" as const, emoji: "💚" },
+  // Row 3 — остальные бренды
+  { slug: "yandex",      name: "Яндекс",             desc: "Станция 2, Станция Макс",        gradient: "135deg, #0a0f1a 0%, #0d1520 100%",  image: "/src/images/yandex.png" as string | null,   glowColor: "rgba(252,56,56,0.25)",   blend: "normal" as const, emoji: "🔴" },
+  { slug: "dyson",       name: "Dyson",              desc: "Умная техника для дома",         gradient: "135deg, #1a0f0a 0%, #2d1f15 100%",  image: "/src/images/dyson.png" as string | null,    glowColor: "rgba(234,88,12,0.25)",   blend: "normal" as const, emoji: "🌀" },
+  { slug: "plaud-brand", name: "Plaud",              desc: "AI-диктофоны нового поколения",  gradient: "135deg, #1a1a0a 0%, #2d2d15 100%",  image: "/src/images/plaude.png" as string | null,   glowColor: "rgba(234,179,8,0.2)",    blend: "normal" as const, emoji: "🎙️" },
 ];
 
 function CategoryShowcase() {
+  const [hovered, setHovered] = useState<number | null>(null);
   return (
     <section style={{ padding: "72px 32px", maxWidth: 1280, margin: "0 auto" }}>
-      <h2 className="reveal" style={{ margin: "0 0 8px", fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em", fontFamily: "'DM Sans', sans-serif" }}>
+      <h2 className="reveal" style={{ margin: "0 0 6px", fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em", fontFamily: "'DM Sans', sans-serif" }}>
         Найдите своё устройство
       </h2>
-      <p className="reveal" style={{ margin: "0 0 40px", fontSize: 15, color: "#6b6b80" }}>Выберите категорию и погрузитесь в мир технологий</p>
+      <p className="reveal" style={{ margin: "0 0 24px", fontSize: 14, color: "#6b6b80" }}>Выберите категорию и погрузитесь в мир технологий</p>
       <style>{`
         .cat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
         @media (max-width:768px) { .cat-grid { grid-template-columns:repeat(2,1fr); } }
-        .cat-card { transition:transform 0.22s,box-shadow 0.22s,border-color 0.22s; }
-        .cat-card:hover { transform:scale(1.02); box-shadow:0 20px 60px rgba(99,102,241,0.15); border-color:rgba(99,102,241,0.4) !important; }
-        .cat-card:hover .cat-arrow { opacity:1; transform:translateX(0); color:#6366f1; }
-        .cat-arrow { opacity:0; transform:translateX(-6px); transition:all 0.2s; font-size:18px; }
       `}</style>
       <div className="cat-grid">
-        {CATEGORIES.map(cat => (
-          <Link key={cat.slug} to={`/catalog?category=${cat.slug}`} style={{ textDecoration: "none" }}>
-            <div className="cat-card reveal" style={{
-              background: `linear-gradient(${cat.gradient})`,
-              border: "1px solid rgba(255,255,255,0.06)",
-              borderRadius: 20, height: 180,
-              padding: "24px 28px",
-              display: "flex", flexDirection: "column", justifyContent: "space-between",
-              cursor: "pointer",
-            }}>
-              <span style={{ fontSize: 48 }}>{cat.emoji}</span>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "space-between" }}>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: "#f0f0f5", fontFamily: "'DM Sans', sans-serif" }}>{cat.name}</div>
-                  <span className="cat-arrow">→</span>
+        {CATEGORIES.map((cat, idx) => {
+          const on = hovered === idx;
+          return (
+            <Link key={cat.slug} to={`/catalog?category=${cat.slug}`}
+              style={{ textDecoration: "none", display: "block" }}
+              onMouseEnter={() => setHovered(idx)}
+              onMouseLeave={() => setHovered(null)}
+            >
+              <div className="reveal" style={{
+                position: "relative", height: 200, borderRadius: 20,
+                background: `linear-gradient(${cat.gradient})`,
+                border: `1px solid ${on ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.06)"}`,
+                overflow: "hidden", cursor: "pointer",
+                transition: "transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease",
+                transform: on ? "translateY(-6px) scale(1.01)" : "none",
+                boxShadow: on ? `0 20px 60px ${cat.glowColor}` : "none",
+              }}>
+                {/* Left fade overlay */}
+                <div style={{
+                  position: "absolute", left: 0, top: 0, bottom: 0, width: "60%",
+                  background: "linear-gradient(to right, rgba(0,0,0,0.3) 0%, transparent 100%)",
+                  pointerEvents: "none", zIndex: 1,
+                }} />
+
+                {/* Product image or emoji */}
+                {cat.image
+                  ? <img src={cat.image} alt={cat.name} style={{
+                      position: "absolute", right: -10, bottom: 0,
+                      height: "85%", width: "auto", maxWidth: "55%",
+                      objectFit: "contain", objectPosition: "bottom right",
+                      filter: `drop-shadow(0 10px 30px ${cat.glowColor})`,
+                      transition: "transform 0.3s ease",
+                      transform: on ? "scale(1.08) translateY(-4px)" : "none",
+                      mixBlendMode: cat.blend,
+                    }} />
+                  : <span style={{
+                      position: "absolute", right: 20, bottom: 20,
+                      fontSize: 80, lineHeight: 1, opacity: 0.6,
+                      filter: "drop-shadow(0 10px 20px rgba(0,0,0,0.5))",
+                      transition: "transform 0.3s ease",
+                      transform: on ? "scale(1.08) translateY(-4px)" : "none",
+                      display: "block",
+                    }}>{cat.emoji}</span>
+                }
+
+                {/* Arrow */}
+                <div style={{
+                  position: "absolute", top: 16, right: 16, zIndex: 2,
+                  width: 28, height: 28, borderRadius: "50%",
+                  background: on ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.08)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 12, color: on ? "white" : "rgba(255,255,255,0.4)",
+                  transition: "all 0.3s",
+                  transform: on ? "translate(2px, -2px)" : "none",
+                }}>→</div>
+
+                {/* Text */}
+                <div style={{ position: "absolute", left: 20, bottom: 20, zIndex: 2 }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: "#f0f0f5", marginBottom: 4, letterSpacing: "-0.02em", fontFamily: "'DM Sans', sans-serif" }}>{cat.name}</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>{cat.desc}</div>
                 </div>
-                <div style={{ fontSize: 13, color: "#6b6b80", marginTop: 2 }}>{cat.desc}</div>
               </div>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
       </div>
     </section>
   );
@@ -351,7 +405,7 @@ export function HomePage() {
       <CategoryShowcase />
       <ReviewsSection />
       <footer style={{ borderTop: "1px solid rgba(255,255,255,0.08)", padding: "32px", textAlign: "center", color: "#6b6b80", fontSize: 13 }}>
-        © 2026 ABC Store · Москва · <a href="https://t.me/ABCapplemanager" target="_blank" rel="noreferrer" style={{ color: "#6366f1", textDecoration: "none" }}>@ABCapplemanager</a>
+        Обращаем ваше внимание на то, что данный Интернет-сайт носит исключительно информационный характер и ни при каких условиях не является публичной офертой, определяемой положениями Статьи 437 Гражданского кодекса Российской Федерации. Для получения подробной информации о стоимости техники обращайтесь к менеджерам по продажам из вкладки «Контакты». Права на сайт принадлежат ООО «ABC STORE» (ИНН 054702011845, ОГРН 325050000141850 от 02 февраля 2026 года), тел. +7 928 470-30-00, e-mail: abc-store-email@gmail.com <a href="https://t.me/ABCapplemanager" target="_blank" rel="noreferrer" style={{ color: "#6366f1", textDecoration: "none" }}>@ABCapplemanager</a>
       </footer>
     </div>
   );

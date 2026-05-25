@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-export function useScrollReveal() {
+export function useScrollReveal(trigger?: unknown) {
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -22,11 +22,12 @@ export function useScrollReveal() {
     };
 
     observe();
-    const timers = [200, 600, 1200, 2000].map((ms) => setTimeout(observe, ms));
+    const timer = setTimeout(observe, 200);
 
     return () => {
       observer.disconnect();
-      timers.forEach(clearTimeout);
+      clearTimeout(timer);
     };
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trigger]);
 }

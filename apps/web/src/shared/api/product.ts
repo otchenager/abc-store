@@ -43,6 +43,7 @@ export interface ProductFilters {
   maxPrice?: number;
   search?: string;
   featured?: boolean;
+  sort?: string;
   page?: number;
   limit?: number;
 }
@@ -79,6 +80,7 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Product
   if (filters.maxPrice !== undefined) params.set("maxPrice", String(filters.maxPrice));
   if (filters.search) params.set("search", filters.search);
   if (filters.featured) params.set("featured", "true");
+  if (filters.sort) params.set("sort", filters.sort);
   if (filters.page) params.set("page", String(filters.page));
   if (filters.limit) params.set("limit", String(filters.limit));
 

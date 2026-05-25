@@ -23,28 +23,46 @@ interface CartItem { product: ProductWithRelations; qty: number; }
 
 // ─── Переводы категорий ───────────────────────────────────────────────────────
 const CATEGORY_RU: Record<string, string> = {
-  iphone: "iPhone",
-  macbook: "MacBook",
-  airpods: "AirPods",
-  watches: "Apple Watch",
-  vision: "Apple Vision",
+  // Категориальные (Apple + конкуренты)
+  iphone: "Смартфоны",
+  macbook: "Ноутбуки",
+  airpods: "Наушники",
+  watches: "Носимые",
+  vision: "VR / AR",
+  gaming: "Консоли",
+  // Бренды (нишевые)
   dji: "DJI",
-  "smart-glasses": "Ray-Ban",
-  fitness: "WHOOP",
-  dictaphones: "Plaud",
-  headphones: "Beats",
+  microphones: "Микрофоны",
+  cameras: "Камеры DJI",
+  rayban: "Ray-Ban",
+  whoop: "WHOOP",
+  garmin: "Garmin",
+  "smart-home": "Умный дом",
+  dyson: "Dyson",
+  yandex: "Яндекс",
+  "plaud-brand": "Plaud",
+  "smart-glasses": "Умные очки",
+  dictaphones: "AI-гаджеты",
 };
 const CATEGORY_EMOJI: Record<string, string> = {
-  iphone: "📱",
-  macbook: "💻",
-  airpods: "🎧",
-  watches: "⌚",
-  vision: "🥽",
-  dji: "🚁",
-  "smart-glasses": "🕶️",
-  fitness: "💚",
-  dictaphones: "🎙️",
-  headphones: "🎵",
+  iphone: "",
+  macbook: "",
+  airpods: "",
+  watches: "",
+  vision: "",
+  gaming: "",
+  dji: "",
+  microphones: "",
+  cameras: "",
+  rayban: "",
+  whoop: "",
+  garmin: "",
+  "smart-home": "",
+  dyson: "",
+  yandex: "",
+  "plaud-brand": "",
+  "smart-glasses": "",
+  dictaphones: "",
 };
 
 // ─── Стили ────────────────────────────────────────────────────────────────────
@@ -166,24 +184,16 @@ function OrderModal({
     if (!name.trim() || !phone.trim()) { setError("Заполните имя и телефон"); return; }
     setSending(true); setError("");
     try {
-      const response = await fetch("http://localhost:4000/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: name.trim(),
-          phone: phone.trim(),
-          comment: comment.trim() || undefined,
-          items: cart.map(i => ({
-            productId: i.product.id,
-            name: i.product.name,
-            price: i.product.price,
-            qty: i.qty,
-            quantity: i.qty,
-          })),
-          total: cart.reduce((s, i) => s + i.product.price * i.qty, 0),
-        }),
+      await postOrder({
+        customerName: name.trim(),
+        customerPhone: phone.trim(),
+        comment: comment.trim() || undefined,
+        items: cart.map(i => ({
+          productId: i.product.id,
+          quantity: i.qty,
+          price: i.product.price,
+        })),
       });
-      if (!response.ok) throw new Error("Failed");
       setSending(false);
       onSuccess();
     } catch {
@@ -307,16 +317,18 @@ function ProductCard({ product, onAddToCart, inCart, reveal }: {
       borderRadius: 16, overflow: "hidden", display: "flex", flexDirection: "column",
       transition: "transform 0.25s, box-shadow 0.25s, border-color 0.25s",
     }}>
-      <Link to={`/product/${product.slug}`} style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", flex: 1 }}>
+      <Link to={`/product/${product.slug}`} style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", flex: 1 }}
+        onClick={() => { fetch(`${import.meta.env.VITE_API_URL ?? "http://localhost:4000"}/api/products/${product.slug}/click`, { method: "POST" }).catch(() => null); }}>
         {/* Image zone */}
         <div style={{
-          aspectRatio: "4/3", background: "#0d0d14",
-          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-          position: "relative", overflow: "hidden", padding: "16px 12px",
+          height: "220px", width: "100%",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: "8px", background: "#0d0d14", overflow: "hidden",
+          position: "relative",
         }}>
           {product.imageUrl
             ? <img className="card-img" src={product.imageUrl} alt={product.name}
-                style={{ width: "100%", height: "100%", objectFit: "contain", transition: "transform 0.4s ease" }}
+                style={{ width: "85%", height: "200px", objectFit: "contain", display: "block", margin: "0 auto", transition: "transform 0.4s ease", mixBlendMode: "screen" }}
                 loading="lazy" />
             : <>
                 <div style={{ fontSize: 72, lineHeight: 1 }}>
@@ -347,7 +359,18 @@ function ProductCard({ product, onAddToCart, inCart, reveal }: {
           <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3, color: "#f0f0f5", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
             {product.name}
           </div>
-          <div style={{ marginTop: 8, display: "flex", alignItems: "baseline", gap: 8 }}>
+          {(() => {
+            const rating = product.rating ?? 5.0;
+            const reviewCount = product.reviewCount ?? 0;
+            const full = Math.floor(rating);
+            return (
+              <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 5, marginBottom: 2 }}>
+                <span style={{ color: "#f59e0b", fontSize: 11 }}>{"★".repeat(full)}{"☆".repeat(5 - full)}</span>
+                <span style={{ color: "var(--muted)", fontSize: 11 }}>{rating.toFixed(1)} ({reviewCount.toLocaleString("ru-RU")})</span>
+              </div>
+            );
+          })()}
+          <div style={{ marginTop: 4, display: "flex", alignItems: "baseline", gap: 8 }}>
             <span style={{ fontSize: 18, fontWeight: 800, color: "#f0f0f5" }}>{formatRub(product.price)}</span>
             {product.oldPrice !== null && (
               <span style={{ fontSize: 12, color: "#6b6b80", textDecoration: "line-through" }}>
@@ -400,20 +423,37 @@ function FilterSidebar({ filters, activeFilters, onChange }: {
             Все <span style={{ marginLeft: "auto", opacity: 0.4 }}>{totalCount}</span>
           </button>
           {(() => {
-            const CATEGORY_ORDER = ["iphone","macbook","airpods","watches","vision","dji","smart-glasses","fitness","dictaphones","headphones"];
-            const sorted = filters.categories
-              .sort((a, b) => {
-                const ai = CATEGORY_ORDER.indexOf(a.slug);
-                const bi = CATEGORY_ORDER.indexOf(b.slug);
-                return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
-              });
-            return sorted;
-          })().map((cat) => (
-            <button key={cat.id} onClick={() => onChange({ category: cat.slug, page: 1 })} style={filterBtn(activeFilters.category === cat.slug)}>
-              {CATEGORY_EMOJI[cat.slug]} {CATEGORY_RU[cat.slug] ?? cat.name}
-              <span style={{ marginLeft: "auto", opacity: 0.4 }}>{cat.count}</span>
-            </button>
-          ))}
+            const CAT_FIRST  = ["iphone","macbook","airpods","watches","vision","gaming"];
+            const CAT_BRANDS = ["dji","microphones","cameras","rayban","whoop","dyson","yandex","plaud-brand"];
+            const allOrder = [...CAT_FIRST, ...CAT_BRANDS];
+            const sorted = [...filters.categories]
+              .filter(c => allOrder.includes(c.slug))
+              .sort((a, b) => allOrder.indexOf(a.slug) - allOrder.indexOf(b.slug));
+            const first  = sorted.filter(c => CAT_FIRST.includes(c.slug));
+            const brands = sorted.filter(c => CAT_BRANDS.includes(c.slug));
+            return (
+              <>
+                {first.map(cat => (
+                  <button key={cat.id} onClick={() => onChange({ category: cat.slug, page: 1 })} style={filterBtn(activeFilters.category === cat.slug)}>
+                    {CATEGORY_EMOJI[cat.slug]} {CATEGORY_RU[cat.slug] ?? cat.name}
+                    <span style={{ marginLeft: "auto", opacity: 0.4 }}>{cat.count}</span>
+                  </button>
+                ))}
+                {brands.length > 0 && (
+                  <>
+                    <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "8px 0" }} />
+                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.2)", padding: "4px 0" }}>Бренды</div>
+                    {brands.map(cat => (
+                      <button key={cat.id} onClick={() => onChange({ category: cat.slug, page: 1 })} style={filterBtn(activeFilters.category === cat.slug)}>
+                        {CATEGORY_EMOJI[cat.slug]} {CATEGORY_RU[cat.slug] ?? cat.name}
+                        <span style={{ marginLeft: "auto", opacity: 0.4 }}>{cat.count}</span>
+                      </button>
+                    ))}
+                  </>
+                )}
+              </>
+            );
+          })()}
         </div>
       </div>
 
@@ -455,10 +495,10 @@ function FilterSidebar({ filters, activeFilters, onChange }: {
 
 // ─── CatalogPage ──────────────────────────────────────────────────────────────
 export function CatalogPage() {
-  useScrollReveal();
   useEffect(() => { document.title = "Каталог — ABC Store"; return () => { document.title = "ABC Store — Гаджеты для жизни"; }; }, []);
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<ProductWithRelations[]>([]);
+  useScrollReveal(products);
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: 12, totalPages: 0 });
   const [filterData, setFilterData] = useState<FiltersResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -501,6 +541,7 @@ export function CatalogPage() {
     minPrice: searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined,
     maxPrice: searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined,
     search: searchParams.get("search") ?? undefined,
+    sort: searchParams.get("sort") ?? "popular",
     page: Number(searchParams.get("page") ?? 1),
   };
 
@@ -524,7 +565,6 @@ export function CatalogPage() {
   }, [searchParams]);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
     setLoading(true); setError(null);
     getProducts(activeFilters)
       .then(({ data, meta }) => { setProducts(data); setMeta(meta); })
@@ -610,9 +650,24 @@ export function CatalogPage() {
         {/* Content */}
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px" }}>
           <div style={{ marginBottom: 28 }}>
-            <h1 style={{ margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: "-0.03em" }}>{titleRu}</h1>
+            <h1 style={{ margin: "0 0 12px", fontSize: 28, fontWeight: 700, letterSpacing: "-0.03em" }}>{titleRu}</h1>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+              {(["new", "price_asc", "price_desc", "popular"] as const).map((v) => {
+                const labels = { new: "Новые", price_asc: "Дешевле", price_desc: "Дороже", popular: "Популярные" };
+                const active = (activeFilters.sort ?? "new") === v;
+                return (
+                  <button key={v} onClick={() => updateFilters({ sort: v, page: 1 })} style={{
+                    padding: "6px 14px", borderRadius: 8, fontSize: 13, cursor: "pointer", transition: "all 0.15s",
+                    background: active ? "var(--accent)" : "transparent",
+                    border: active ? "none" : "1px solid var(--border)",
+                    color: active ? "white" : "var(--muted)",
+                    fontWeight: active ? 600 : 400,
+                  }}>{labels[v]}</button>
+                );
+              })}
+            </div>
             {!loading && (
-              <p style={{ margin: "6px 0 0", fontSize: 13, color: "var(--muted)" }}>
+              <p style={{ margin: "8px 0 0", fontSize: 13, color: "var(--muted)" }}>
                 {meta.total} {meta.total === 1 ? "товар" : meta.total < 5 ? "товара" : "товаров"}
                 {activeFilters.search ? ` по запросу «${activeFilters.search}»` : ""}
               </p>
@@ -623,7 +678,7 @@ export function CatalogPage() {
             <div className="mobile-cats">
               <button onClick={() => updateFilters({ category: undefined, page: 1 })} style={{ flexShrink: 0, padding: "7px 16px", borderRadius: 20, border: `1px solid ${!activeFilters.category ? "var(--accent)" : "var(--border)"}`, background: !activeFilters.category ? "rgba(99,102,241,0.1)" : "transparent", color: !activeFilters.category ? "var(--accent)" : "var(--text)", fontSize: 13, cursor: "pointer", whiteSpace: "nowrap" }}>Все</button>
               {(() => {
-                const ORDER = ["iphone","macbook","airpods","watches","vision","dji","smart-glasses","fitness","dictaphones","headphones"];
+                const ORDER = ["iphone","macbook","airpods","watches","vision","gaming","dji","microphones","cameras","rayban","whoop","dyson","yandex","plaud-brand"];
                 return filterData.categories.filter(c => c.count > 0)
                   .sort((a, b) => (ORDER.indexOf(a.slug) === -1 ? 99 : ORDER.indexOf(a.slug)) - (ORDER.indexOf(b.slug) === -1 ? 99 : ORDER.indexOf(b.slug)))
                   .map(cat => (

@@ -61,6 +61,13 @@ model Product {
   price       Float
   oldPrice    Float?
   imageUrl    String?
+  specs           String?
+  reviews         String?
+  reviewsArchive  String?
+  clicks      Int         @default(0)
+  clicksMonth Int         @default(0)
+  reviewCount Int         @default(0)
+  rating      Float       @default(5.0)
   isFeatured  Boolean     @default(false)
   isPublished Boolean     @default(true)
   categoryId  String

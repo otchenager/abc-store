@@ -85,20 +85,26 @@ ordersRouter.post("/", async (req, res) => {
       return;
     }
 
-    const totalAmount = items.reduce(
-      (sum, item) => sum + item.price * (item.quantity ?? item.qty ?? 1),
-      0
-    );
-
-    // Verify which productIds actually exist to avoid FK errors
+    // Validate product IDs and fetch prices from DB to prevent client-side manipulation
     const requestedIds = items.map(i => i.productId).filter(Boolean) as string[];
     const existingProducts = await prisma.product.findMany({
       where: { id: { in: requestedIds } },
-      select: { id: true },
+      select: { id: true, price: true, name: true },
     });
-    const validIds = new Set(existingProducts.map(p => p.id));
+    const productMap = new Map(existingProducts.map(p => [p.id, p]));
 
-    const validItems = items.filter(i => i.productId && validIds.has(i.productId));
+    const validItems = items.filter(i => i.productId && productMap.has(i.productId));
+
+    if (validItems.length === 0) {
+      res.status(400).json({ error: "no valid items" });
+      return;
+    }
+
+    // Always use DB prices
+    const totalAmount = validItems.reduce(
+      (sum, item) => sum + productMap.get(item.productId!)!.price * (item.quantity ?? item.qty ?? 1),
+      0
+    );
 
     const order = await prisma.order.create({
       data: {
@@ -107,26 +113,22 @@ ordersRouter.post("/", async (req, res) => {
         customerPhone,
         comment: comment?.trim() || null,
         totalAmount,
-        ...(validItems.length > 0 && {
-          items: {
-            create: validItems.map(item => ({
-              productId: item.productId!,
-              quantity: item.quantity ?? item.qty ?? 1,
-              price: item.price,
-            })),
-          },
-        }),
+        items: {
+          create: validItems.map(item => ({
+            productId: item.productId!,
+            quantity: item.quantity ?? item.qty ?? 1,
+            price: productMap.get(item.productId!)!.price,
+          })),
+        },
       },
       include: { items: { include: { product: true } } },
     });
 
-    // Build Telegram notification — prefer DB product names, fall back to request names
-    const dbItemMap = new Map(order.items.map(i => [i.productId, i]));
-    const telegramItems = items.map(item => ({
-      name: item.productId && dbItemMap.has(item.productId)
-        ? dbItemMap.get(item.productId)!.product.name
-        : (item.name ?? "Товар"),
-      price: item.price,
+    void order; // included for future use; telegram uses productMap directly
+
+    const telegramItems = validItems.map(item => ({
+      name: productMap.get(item.productId!)!.name,
+      price: productMap.get(item.productId!)!.price,
       qty: item.quantity ?? item.qty ?? 1,
     }));
 
