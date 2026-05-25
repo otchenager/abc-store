@@ -2,7 +2,6 @@
   "name": "@repo/api",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
   "scripts": {
     "dev": "tsx watch src/app/server.ts",
     "build": "prisma generate && tsc -p tsconfig.json",

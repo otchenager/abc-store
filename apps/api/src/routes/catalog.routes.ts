@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 import { Router } from "express";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import cron from "node-cron";
-import { prisma } from "../database/prisma.js";
+import { prisma } from "../database/prisma";
 
 const RUSSIAN_CITIES = [
   "Москва", "Санкт-Петербург", "Екатеринбург", "Новосибирск",

@@ -1,9 +1,9 @@
 import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
-import { env } from "../config/env.js";
-import { catalogRouter } from "../routes/catalog.routes.js";
-import { ordersRouter } from "../routes/orders.routes.js";
+import { env } from "../config/env";
+import { catalogRouter } from "../routes/catalog.routes";
+import { ordersRouter } from "../routes/orders.routes";
 
 const orderLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes

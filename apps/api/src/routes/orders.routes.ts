@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { prisma } from "../database/prisma.js";
-import { env } from "../config/env.js";
+import { prisma } from "../database/prisma";
+import { env } from "../config/env";
 
 export const ordersRouter = Router();
 
