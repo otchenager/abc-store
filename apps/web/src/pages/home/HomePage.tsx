@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import Navbar from "../../components/Navbar";
 import { getProducts, type ProductWithRelations } from "../../shared/api/product";
 import { useScrollReveal } from "../../hooks/useScrollReveal";
 
@@ -23,10 +24,10 @@ function CinematicHero() {
   }, [started, tagline]);
 
   const floaters = [
-    { src: "/images/iphone17.png",         top: "12%",    left: "8%",  animClass: "float-a", local: true },
-    { src: "/images/applewatchultra.png",  top: "12%",    right: "6%", animClass: "float-b", local: true },
-    { src: "/images/DJI_Mavic_4.png",      bottom: "15%", left: "8%",  animClass: "float-b", local: true },
-    { src: "/images/ray-ban.png",          bottom: "18%", right: "7%", animClass: "float-a", local: true },
+    { src: "/images/iphone17.png",        animClass: "float-a", local: true },
+    { src: "/images/applewatchultra.png", animClass: "float-b", local: true },
+    { src: "/images/DJI_Mavic_4.png",     animClass: "float-b", local: true },
+    { src: "/images/ray-ban.png",         animClass: "float-a", local: true },
   ];
 
   return (
@@ -46,7 +47,17 @@ function CinematicHero() {
         .float-b { animation: float-b 6s ease-in-out infinite 1s; }
         @keyframes scrollBounce { 0%,100%{transform:translateY(0);opacity:0.5} 50%{transform:translateY(7px);opacity:1} }
         .scroll-arrow { animation: scrollBounce 1.8s ease-in-out infinite; }
-        @media (max-width: 768px) { .hero-floater { display:none !important; } }
+        .fl-0 { top:12%;    left:8%;  }
+        .fl-1 { top:12%;    right:6%; }
+        .fl-2 { bottom:15%; left:8%;  }
+        .fl-3 { bottom:18%; right:7%; }
+        @media (max-width:768px) {
+          .hero-floater img { width:70px; }
+          .fl-0 { top:6%;    left:2%;  right:auto; bottom:auto; }
+          .fl-1 { top:6%;    right:2%; left:auto;  bottom:auto; }
+          .fl-2 { bottom:10%; left:2%;  right:auto; top:auto; }
+          .fl-3 { bottom:10%; right:2%; left:auto;  top:auto; }
+        }
       `}</style>
 
       {/* Pulsing radial glow */}
@@ -58,21 +69,17 @@ function CinematicHero() {
       }} />
 
       {/* Floating images */}
-      {floaters.map((f, i) => {
-        const { src, animClass, local, ...pos } = f as { src: string; animClass: string; local: boolean; top?: string; bottom?: string; left?: string; right?: string };
-        return (
-          <div key={i} className={`hero-floater ${animClass}`} style={{
-            position: "absolute", zIndex: 0, background: "transparent", border: "none",
-            ...pos,
-          }}>
-            <img src={src} alt="" style={{
-              width: 160, display: "block",
-              filter: "drop-shadow(0 16px 48px rgba(99,102,241,0.45))",
-              ...(local ? { mixBlendMode: "screen" as const } : {}),
-            }} />
-          </div>
-        );
-      })}
+      {floaters.map((f, i) => (
+        <div key={i} className={`hero-floater fl-${i} ${f.animClass}`} style={{
+          position: "absolute", zIndex: 0, background: "transparent", border: "none",
+        }}>
+          <img src={f.src} alt="" style={{
+            width: 160, display: "block",
+            filter: "drop-shadow(0 16px 48px rgba(99,102,241,0.45))",
+            ...(f.local ? { mixBlendMode: "screen" as const } : {}),
+          }} />
+        </div>
+      ))}
 
       {/* Headline */}
       <div style={{ textAlign: "center", zIndex: 1, position: "relative" }}>
@@ -400,6 +407,7 @@ export function HomePage() {
   return (
     <div style={{ background: "#0a0a0f", minHeight: "100vh", color: "#f0f0f5", fontFamily: "'DM Sans', system-ui, sans-serif" }}>
       <style>{`@keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:.7} }`}</style>
+      <Navbar />
       <CinematicHero />
       <BrandStrip />
       <FeaturedProducts />
