@@ -612,7 +612,6 @@ export function CatalogPage() {
           .mobile-cats { display:flex; overflow-x:auto; gap:8px; padding-bottom:4px; margin-bottom:20px; scrollbar-width:none; }
           .mobile-cats::-webkit-scrollbar { display:none; }
           .catalog-header { padding:0 16px !important; }
-          .catalog-content { padding:20px 16px; }
           .product-img-zone { height:160px !important; }
         }
         @media (min-width:769px) and (max-width:1100px) {
@@ -669,7 +668,7 @@ export function CatalogPage() {
         )}
 
         {/* Content */}
-        <div className="catalog-content" style={{ maxWidth: 1280, margin: "0 auto" }}>
+        <div className="catalog-content" style={{ maxWidth: 1280, margin: "0 auto", padding: "clamp(20px,3vw,32px) clamp(16px,3vw,32px)" }}>
           <div style={{ marginBottom: 28 }}>
             <h1 style={{ margin: "0 0 12px", fontSize: 28, fontWeight: 700, letterSpacing: "-0.03em" }}>{titleRu}</h1>
             <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
