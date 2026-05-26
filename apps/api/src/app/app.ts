@@ -15,9 +15,13 @@ const orderLimiter = rateLimit({
 export function createApp() {
   const app = express();
 
+  const allowedOrigins = env.CLIENT_URL.split(",").map((o) => o.trim());
   app.use(
     cors({
-      origin: env.CLIENT_URL,
+      origin: (origin, cb) => {
+        if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+        cb(new Error(`CORS: origin ${origin} not allowed`));
+      },
       credentials: true,
     })
   );
