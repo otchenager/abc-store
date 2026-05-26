@@ -497,6 +497,7 @@ function FilterSidebar({ filters, activeFilters, onChange }: {
 export function CatalogPage() {
   useEffect(() => { document.title = "Каталог — ABC Store"; return () => { document.title = "ABC Store — Гаджеты для жизни"; }; }, []);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [products, setProducts] = useState<ProductWithRelations[]>([]);
   useScrollReveal(products);
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: 12, totalPages: 0 });
@@ -596,11 +597,18 @@ export function CatalogPage() {
         .product-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
         .mobile-cats { display:none; }
         .header-nav { display:flex; align-items:center; gap:20px; font-size:13px; }
+        .cat-burger { display:none; background:none; border:none; cursor:pointer; padding:6px; color:rgba(255,255,255,0.85); flex-direction:column; gap:5px; }
+        .cat-burger-bar { display:block; width:22px; height:2px; background:currentColor; border-radius:2px; transition:transform 0.25s ease, opacity 0.2s ease; }
+        .cat-mobile-nav { background:rgba(10,10,15,0.97); backdrop-filter:blur(16px); border-bottom:1px solid rgba(255,255,255,0.07); animation:catNavSlide 0.22s ease; position:sticky; top:60px; z-index:99; }
+        .cat-mobile-link { display:block; padding:1rem 1.25rem; color:rgba(255,255,255,0.75); text-decoration:none; font-size:1rem; font-weight:500; border-bottom:1px solid rgba(255,255,255,0.05); transition:background 0.15s, color 0.15s; }
+        .cat-mobile-link:active { background:rgba(255,255,255,0.05); }
+        @keyframes catNavSlide { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
         @media (max-width:768px) {
           .catalog-layout { grid-template-columns:1fr; }
           .catalog-sidebar { display:none; }
           .product-grid { grid-template-columns:repeat(2,1fr); }
           .header-nav { display:none; }
+          .cat-burger { display:flex; }
           .mobile-cats { display:flex; overflow-x:auto; gap:8px; padding-bottom:4px; margin-bottom:20px; scrollbar-width:none; }
           .mobile-cats::-webkit-scrollbar { display:none; }
           .catalog-header { padding:0 16px !important; }
@@ -631,24 +639,34 @@ export function CatalogPage() {
               <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--muted)" }}>⌕</span>
             </div>
           </form>
-          <nav className="header-nav" style={{}}>
-
-            <Link to="/" style={{ color: "var(--muted)", textDecoration: "none" }}>Главная</Link>
-            <Link to="/catalog" style={{ color: "var(--text)", textDecoration: "none", fontWeight: 600 }}>Каталог</Link>
-            <Link to="/contacts" style={{ color: "var(--muted)", textDecoration: "none" }}>Контакты</Link>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <nav className="header-nav">
+              <Link to="/" style={{ color: "var(--muted)", textDecoration: "none" }}>Главная</Link>
+              <Link to="/catalog" style={{ color: "var(--text)", textDecoration: "none", fontWeight: 600 }}>Каталог</Link>
+              <Link to="/contacts" style={{ color: "var(--muted)", textDecoration: "none" }}>Контакты</Link>
+            </nav>
             <button onClick={() => setCartOpen(true)} style={{
-              position: "relative", background: cartCount > 0 ? "var(--accent)" : "var(--card-bg)",
+              background: cartCount > 0 ? "var(--accent)" : "var(--card-bg)",
               border: "1px solid var(--border)", borderRadius: 10, padding: "7px 14px",
               color: "var(--text)", fontSize: 13, fontWeight: 600, cursor: "pointer",
               display: "flex", alignItems: "center", gap: 6,
             }}>
-              🛒 Корзина
-              {cartCount > 0 && (
-                <span style={{ background: "#fff", color: "var(--accent)", borderRadius: 100, fontSize: 11, fontWeight: 800, padding: "1px 7px" }}>{cartCount}</span>
-              )}
+              🛒{cartCount > 0 && <span style={{ background: "#fff", color: "var(--accent)", borderRadius: 100, fontSize: 11, fontWeight: 800, padding: "1px 7px" }}>{cartCount}</span>}
             </button>
-          </nav>
+            <button className="cat-burger" onClick={() => setMobileNavOpen(o => !o)} aria-label={mobileNavOpen ? "Закрыть меню" : "Открыть меню"} aria-expanded={mobileNavOpen}>
+              <span className="cat-burger-bar" style={mobileNavOpen ? { transform: "translateY(7px) rotate(45deg)" } : {}} />
+              <span className="cat-burger-bar" style={mobileNavOpen ? { opacity: 0 } : {}} />
+              <span className="cat-burger-bar" style={mobileNavOpen ? { transform: "translateY(-7px) rotate(-45deg)" } : {}} />
+            </button>
+          </div>
         </header>
+        {mobileNavOpen && (
+          <div className="cat-mobile-nav">
+            <Link to="/" className="cat-mobile-link" onClick={() => setMobileNavOpen(false)}>Главная</Link>
+            <Link to="/catalog" className="cat-mobile-link" onClick={() => setMobileNavOpen(false)}>Каталог</Link>
+            <Link to="/contacts" className="cat-mobile-link" onClick={() => setMobileNavOpen(false)}>Контакты</Link>
+          </div>
+        )}
 
         {/* Content */}
         <div className="catalog-content" style={{ maxWidth: 1280, margin: "0 auto", padding: "32px" }}>
