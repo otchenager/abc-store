@@ -101,7 +101,7 @@ function CartSidebar({
         zIndex: 200, backdropFilter: "blur(4px)",
       }} />
       <div style={{
-        position: "fixed", top: 0, right: 0, bottom: 0, width: 380,
+        position: "fixed", top: 0, right: 0, bottom: 0, width: "min(380px, 100vw)",
         background: "var(--card-bg)", borderLeft: "1px solid var(--border)",
         zIndex: 201, display: "flex", flexDirection: "column",
         animation: "slideIn 0.25s ease",
@@ -320,7 +320,7 @@ function ProductCard({ product, onAddToCart, inCart, reveal }: {
       <Link to={`/product/${product.slug}`} style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", flex: 1 }}
         onClick={() => { fetch(`${import.meta.env.VITE_API_URL ?? "http://localhost:4000"}/api/products/${product.slug}/click`, { method: "POST" }).catch(() => null); }}>
         {/* Image zone */}
-        <div style={{
+        <div className="product-img-zone" style={{
           height: "220px", width: "100%",
           display: "flex", alignItems: "center", justifyContent: "center",
           padding: "8px", background: "#0d0d14", overflow: "hidden",
@@ -603,6 +603,9 @@ export function CatalogPage() {
           .header-nav { display:none; }
           .mobile-cats { display:flex; overflow-x:auto; gap:8px; padding-bottom:4px; margin-bottom:20px; scrollbar-width:none; }
           .mobile-cats::-webkit-scrollbar { display:none; }
+          .catalog-header { padding:0 16px !important; }
+          .catalog-content { padding:20px 16px !important; }
+          .product-img-zone { height:160px !important; }
         }
         @media (min-width:769px) and (max-width:1100px) {
           .product-grid { grid-template-columns:repeat(3,1fr); }
@@ -612,7 +615,7 @@ export function CatalogPage() {
       <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: "inherit", color: "var(--text)" }}>
 
         {/* Header */}
-        <header style={{
+        <header className="catalog-header" style={{
           borderBottom: "1px solid var(--border)", padding: "0 32px",
           display: "flex", alignItems: "center", justifyContent: "space-between",
           height: 60, position: "sticky", top: 0,
@@ -648,7 +651,7 @@ export function CatalogPage() {
         </header>
 
         {/* Content */}
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px" }}>
+        <div className="catalog-content" style={{ maxWidth: 1280, margin: "0 auto", padding: "32px" }}>
           <div style={{ marginBottom: 28 }}>
             <h1 style={{ margin: "0 0 12px", fontSize: 28, fontWeight: 700, letterSpacing: "-0.03em" }}>{titleRu}</h1>
             <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>

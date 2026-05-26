@@ -538,7 +538,15 @@ export function ProductPage() {
         .tab-btn{padding:10px 20px;border:none;background:transparent;cursor:pointer;font-size:14px;font-weight:600;border-bottom:2px solid transparent;transition:all 0.2s;font-family:'DM Sans',sans-serif;color:var(--muted);}
         .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
         .trust-item{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;}
-        @media(max-width:768px){.pp-layout{grid-template-columns:1fr;gap:32px;}.pp-content{padding:20px 16px!important;}.pp-header{padding:0 16px!important;}}
+        @media(max-width:768px){
+          .pp-layout{grid-template-columns:1fr;gap:32px;}
+          .pp-content{padding:20px 16px!important;}
+          .pp-header{padding:0 16px!important;}
+          .pp-title{font-size:clamp(22px,6vw,32px)!important;}
+          .pp-price{font-size:clamp(26px,7vw,40px)!important;}
+          .pp-tab-area{margin-top:40px!important;}
+          .sticky-buy{padding:10px 16px!important;}
+        }
       `}</style>
 
       <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text)", fontFamily: "'DM Sans', system-ui, sans-serif" }}>
@@ -597,7 +605,7 @@ export function ProductPage() {
                   </div>
 
                   {/* Name */}
-                  <h1 style={{ margin: 0, fontSize: 32, fontWeight: 800, lineHeight: 1.15, letterSpacing: "-0.03em" }}>{product.name}</h1>
+                  <h1 className="pp-title" style={{ margin: 0, fontSize: 32, fontWeight: 800, lineHeight: 1.15, letterSpacing: "-0.03em" }}>{product.name}</h1>
 
                   {/* Stars */}
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -612,7 +620,7 @@ export function ProductPage() {
                   {/* Price block */}
                   <div style={{ background: "var(--card-bg)", borderRadius: 14, padding: "18px 20px", border: "1px solid var(--border)" }}>
                     <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-                      <span style={{ fontSize: 40, fontWeight: 900, letterSpacing: "-0.03em" }}>{displayPrice.toLocaleString("ru-RU") + " ₽"}</span>
+                      <span className="pp-price" style={{ fontSize: 40, fontWeight: 900, letterSpacing: "-0.03em" }}>{displayPrice.toLocaleString("ru-RU") + " ₽"}</span>
                       {displayOldPrice && (
                         <span style={{ fontSize: 20, color: "var(--muted)", textDecoration: "line-through" }}>{displayOldPrice.toLocaleString("ru-RU") + " ₽"}</span>
                       )}
@@ -725,7 +733,7 @@ export function ProductPage() {
               </div>
 
               {/* Tab section */}
-              <div style={{ marginTop: 64 }}>
+              <div className="pp-tab-area" style={{ marginTop: 64 }}>
                 <div style={{ display: "flex", borderBottom: "1px solid var(--border)", marginBottom: 28 }}>
                   {([["desc", "Описание"], ["specs", "Характеристики"], ["reviews", "Отзывы"]] as const).map(([key, label]) => (
                     <button key={key} className={`tab-btn${activeTab === key ? " active" : ""}`} onClick={() => setActiveTab(key)}>{label}</button>

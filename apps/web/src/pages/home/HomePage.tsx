@@ -23,10 +23,10 @@ function CinematicHero() {
   }, [started, tagline]);
 
   const floaters = [
-    { src: "/images/iphone17.png", top: "12%", left: "8%",   animClass: "float-a", local: true },
-    { src: "/images/applewatchultra.png",  top: "12%",  right: "6%",  animClass: "float-b", local: true },
-    { src: "https://abcdemo1.vercel.app/DJI_Mavic_4.png", bottom: "15%", left: "8%",  animClass: "float-b", local: false },
-    { src: "https://abcdemo1.vercel.app/ray-ban.png",     bottom: "18%", right: "7%", animClass: "float-a", local: false },
+    { src: "/images/iphone17.png",         top: "12%",    left: "8%",  animClass: "float-a", local: true },
+    { src: "/images/applewatchultra.png",  top: "12%",    right: "6%", animClass: "float-b", local: true },
+    { src: "/images/DJI_Mavic_4.png",      bottom: "15%", left: "8%",  animClass: "float-b", local: true },
+    { src: "/images/ray-ban.png",          bottom: "18%", right: "7%", animClass: "float-a", local: true },
   ];
 
   return (
@@ -179,12 +179,11 @@ function MiniCard({ product }: { product: ProductWithRelations }) {
   const discount = hasDiscount ? Math.round(((product.oldPrice! - product.price) / product.oldPrice!) * 100) : null;
 
   return (
-    <Link to={`/product/${product.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
+    <Link to={`/product/${product.slug}`} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
       <div className="reveal" style={{
         background: "#13131a", border: "1px solid rgba(255,255,255,0.08)",
         borderRadius: 16, overflow: "hidden",
         transition: "transform 0.2s, box-shadow 0.2s",
-        flexShrink: 0, width: 220,
       }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-4px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 16px 48px rgba(99,102,241,0.15)"; }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.boxShadow = ""; }}
@@ -220,7 +219,7 @@ function FeaturedProducts() {
   }, []);
 
   return (
-    <section style={{ padding: "72px 32px", maxWidth: 1280, margin: "0 auto" }}>
+    <section style={{ padding: "clamp(40px,6vw,72px) clamp(16px,4vw,32px)", maxWidth: 1280, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32 }}>
         <h2 style={{ margin: 0, fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em", fontFamily: "'DM Sans', sans-serif" }}>Хиты продаж</h2>
         <Link to="/catalog?featured=true" style={{ fontSize: 14, color: "#6366f1", textDecoration: "none", fontWeight: 600 }}>Все товары →</Link>
@@ -229,7 +228,7 @@ function FeaturedProducts() {
       <style>{`
         .feat-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
         @media (max-width:1024px) { .feat-row { grid-template-columns:repeat(3,1fr); } }
-        @media (max-width:768px)  { .feat-row { display:flex; overflow-x:auto; gap:12px; padding-bottom:8px; scrollbar-width:none; } .feat-row::-webkit-scrollbar { display:none; } }
+        @media (max-width:768px)  { .feat-row { grid-template-columns:repeat(2,1fr); gap:12px; } }
       `}</style>
 
       {loading ? (
@@ -280,14 +279,16 @@ const CATEGORIES = [
 function CategoryShowcase() {
   const [hovered, setHovered] = useState<number | null>(null);
   return (
-    <section style={{ padding: "72px 32px", maxWidth: 1280, margin: "0 auto" }}>
+    <section style={{ padding: "clamp(40px,6vw,72px) clamp(16px,4vw,32px)", maxWidth: 1280, margin: "0 auto" }}>
       <h2 className="reveal" style={{ margin: "0 0 6px", fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em", fontFamily: "'DM Sans', sans-serif" }}>
         Найдите своё устройство
       </h2>
       <p className="reveal" style={{ margin: "0 0 24px", fontSize: 14, color: "#6b6b80" }}>Выберите категорию и погрузитесь в мир технологий</p>
       <style>{`
         .cat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-        @media (max-width:768px) { .cat-grid { grid-template-columns:repeat(2,1fr); } }
+        .cat-card  { height:200px; }
+        @media (max-width:768px) { .cat-grid { grid-template-columns:repeat(2,1fr); } .cat-card { height:140px; } }
+        @media (max-width:480px) { .cat-grid { grid-template-columns:1fr; } .cat-card { height:140px; } }
       `}</style>
       <div className="cat-grid">
         {CATEGORIES.map((cat, idx) => {
@@ -298,8 +299,8 @@ function CategoryShowcase() {
               onMouseEnter={() => setHovered(idx)}
               onMouseLeave={() => setHovered(null)}
             >
-              <div className="reveal" style={{
-                position: "relative", height: 200, borderRadius: 20,
+              <div className="reveal cat-card" style={{
+                position: "relative", borderRadius: 20,
                 background: `linear-gradient(${cat.gradient})`,
                 border: `1px solid ${on ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.06)"}`,
                 overflow: "hidden", cursor: "pointer",
@@ -369,7 +370,7 @@ const REVIEWS = [
 
 function ReviewsSection() {
   return (
-    <section style={{ padding: "72px 32px", maxWidth: 1280, margin: "0 auto" }}>
+    <section style={{ padding: "clamp(40px,6vw,72px) clamp(16px,4vw,32px)", maxWidth: 1280, margin: "0 auto" }}>
       <div style={{ textAlign: "center", marginBottom: 48 }}>
         <h2 className="reveal" style={{ margin: "0 0 8px", fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em", fontFamily: "'DM Sans', sans-serif" }}>Нам доверяют</h2>
         <p className="reveal" style={{ margin: 0, fontSize: 15, color: "#6b6b80" }}>5 000+ довольных клиентов по всей России</p>

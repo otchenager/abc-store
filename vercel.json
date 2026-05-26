@@ -3,6 +3,6 @@
   "buildCommand": "pnpm run build",
   "installCommand": "pnpm install",
   "rewrites": [
-    { "source": "/((?!assets/).*)", "destination": "/index.html" }
+    { "source": "/((?!assets/|images/|models/).*)", "destination": "/index.html" }
   ]
 }
