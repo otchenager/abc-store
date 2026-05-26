@@ -594,6 +594,7 @@ export function CatalogPage() {
         .product-card:hover .card-img { transform:scale(1.06); }
         .cta-btn:hover { background:#6366f1 !important; border-color:#6366f1 !important; color:#fff !important; }
         .catalog-layout { display:grid; grid-template-columns:210px 1fr; gap:32px; }
+        .catalog-layout > div { min-width:0; }
         .product-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
         .mobile-cats { display:none; }
         .header-nav { display:flex; align-items:center; gap:20px; font-size:13px; }
