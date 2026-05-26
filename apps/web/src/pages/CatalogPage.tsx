@@ -370,10 +370,10 @@ function ProductCard({ product, onAddToCart, inCart, reveal }: {
               </div>
             );
           })()}
-          <div style={{ marginTop: 4, display: "flex", alignItems: "baseline", gap: 8 }}>
-            <span style={{ fontSize: 18, fontWeight: 800, color: "#f0f0f5" }}>{formatRub(product.price)}</span>
+          <div style={{ marginTop: 4, display: "flex", alignItems: "baseline", gap: 6, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 16, fontWeight: 800, color: "#f0f0f5" }}>{formatRub(product.price)}</span>
             {product.oldPrice !== null && (
-              <span style={{ fontSize: 12, color: "#6b6b80", textDecoration: "line-through" }}>
+              <span style={{ fontSize: 11, color: "#6b6b80", textDecoration: "line-through" }}>
                 {formatRub(product.oldPrice)}
               </span>
             )}
