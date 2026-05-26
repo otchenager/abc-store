@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { CartModal } from './CartModal'
 
 const LINKS = [
   { label: 'Каталог', to: '/catalog' },
@@ -8,8 +9,24 @@ const LINKS = [
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
+  const [cartOpen, setCartOpen] = useState(false)
+  const [cartCount, setCartCount] = useState(0)
+
+  useEffect(() => {
+    const refresh = () => {
+      try {
+        const cart = JSON.parse(localStorage.getItem('cart') ?? '[]')
+        setCartCount(cart.reduce((s: number, i: { qty: number }) => s + i.qty, 0))
+      } catch { /* ignore */ }
+    }
+    refresh()
+    window.addEventListener('storage', refresh)
+    return () => window.removeEventListener('storage', refresh)
+  }, [])
 
   return (
+    <>
+    <CartModal open={cartOpen} onClose={() => setCartOpen(false)} />
     <div style={{ position: 'sticky', top: 0, zIndex: 100 }}>
       <style>{`
         .abc-nav {
@@ -108,6 +125,18 @@ export default function Navbar() {
             background: 'linear-gradient(135deg,#6642ff 0%,#3c78ff 100%)',
             padding: '0.5rem 1.25rem', borderRadius: '0.5rem',
           }}>Купить</Link>
+          <button onClick={() => setCartOpen(true)} style={{
+            position: 'relative', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+            color: '#f0f0f5', borderRadius: '0.5rem', padding: '0.5rem 0.75rem',
+            cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: 6,
+          }}>
+            🛒
+            {cartCount > 0 && (
+              <span style={{ background: '#6366f1', color: '#fff', borderRadius: '50%', fontSize: 10, fontWeight: 700, minWidth: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
+                {cartCount}
+              </span>
+            )}
+          </button>
         </div>
 
         <button
@@ -132,8 +161,18 @@ export default function Navbar() {
           <Link to="/catalog" className="abc-mobile-cta" onClick={() => setOpen(false)}>
             Купить
           </Link>
+          <button onClick={() => { setOpen(false); setCartOpen(true); }} style={{
+            display: 'block', width: 'calc(100% - 3rem)', margin: '0 1.5rem 1.25rem',
+            padding: '0.75rem 1.5rem', borderRadius: '0.5rem',
+            background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+            color: '#f0f0f5', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer',
+            textAlign: 'center',
+          }}>
+            🛒 Корзина{cartCount > 0 ? ` (${cartCount})` : ''}
+          </button>
         </div>
       )}
     </div>
+    </>
   )
 }

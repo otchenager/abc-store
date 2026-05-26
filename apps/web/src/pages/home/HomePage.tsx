@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../../components/Navbar";
-import { getProducts, type ProductWithRelations } from "../../shared/api/product";
+import type { ProductWithRelations } from "../../shared/api/product";
 import { useScrollReveal } from "../../hooks/useScrollReveal";
+
+const API = (import.meta as any).env.VITE_API_URL ?? "http://localhost:4000";
 
 const formatRub = (n: number) => n.toLocaleString("ru-RU") + " ₽";
 
@@ -74,7 +76,7 @@ function CinematicHero() {
           position: "absolute", zIndex: 0, background: "transparent", border: "none",
         }}>
           <img src={f.src} alt="" style={{
-            width: 160, display: "block",
+            width: 112, display: "block",
             filter: "drop-shadow(0 16px 48px rgba(99,102,241,0.45))",
             ...(f.local ? { mixBlendMode: "screen" as const } : {}),
           }} />
@@ -220,8 +222,9 @@ function FeaturedProducts() {
   const rowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    getProducts({ featured: true, limit: 8 })
-      .then(r => { setProducts(r.data); setLoading(false); })
+    fetch(`${API}/api/products?featured=true&limit=8`)
+      .then(r => r.json())
+      .then((r: { data: ProductWithRelations[] }) => { setProducts(r.data); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
 
