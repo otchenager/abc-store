@@ -189,10 +189,11 @@ function MiniCard({ product }: { product: ProductWithRelations }) {
 
   return (
     <Link to={`/product/${product.slug}`} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
-      <div className="reveal" style={{
+      <div style={{
         background: "#13131a", border: "1px solid rgba(255,255,255,0.08)",
         borderRadius: 16, overflow: "hidden",
-        transition: "transform 0.2s, box-shadow 0.2s",
+        opacity: 1,
+        transition: "transform 0.2s, box-shadow 0.2s, opacity 0.3s ease",
       }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-4px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 16px 48px rgba(99,102,241,0.15)"; }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.boxShadow = ""; }}
@@ -220,6 +221,7 @@ function FeaturedProducts() {
   const [products, setProducts] = useState<ProductWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
   const rowRef = useRef<HTMLDivElement>(null);
+  useScrollReveal(products);
 
   console.log("Products state:", products);
   console.log("Loading state:", loading);
