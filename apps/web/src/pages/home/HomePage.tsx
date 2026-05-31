@@ -27,7 +27,7 @@ function CinematicHero() {
   const floaters = [
     { src: "/images/iphone17.png",        animClass: "float-a", local: true },
     { src: "/images/applewatchultra.png", animClass: "float-b", local: true },
-    { src: "/images/DJI_Mavic_4.png",     animClass: "float-b", local: true },
+    { src: "/images/yandex.png",     animClass: "float-b", local: true },
     { src: "/images/Sony PS5.png",         animClass: "float-a", local: true },
   ];
 
