@@ -237,6 +237,9 @@ function FeaturedProducts() {
       .catch(() => setLoading(false));
   }, []);
 
+  console.log("Rendering products count:", products.length);
+  console.log("First product:", products[0]);
+
   return (
     <section style={{ padding: "clamp(40px,6vw,72px) clamp(16px,4vw,32px)", maxWidth: 1280, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32 }}>
