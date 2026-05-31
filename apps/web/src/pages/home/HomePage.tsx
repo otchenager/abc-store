@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../../components/Navbar";
+import { getProducts } from "../../shared/api/product";
 import type { ProductWithRelations } from "../../shared/api/product";
 import { useScrollReveal } from "../../hooks/useScrollReveal";
-
-const API = (import.meta as any).env.VITE_API_URL ?? "http://localhost:4000";
 
 const formatRub = (n: number) => n.toLocaleString("ru-RU") + " ₽";
 
@@ -222,9 +221,8 @@ function FeaturedProducts() {
   const rowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch(`${API}/api/products?featured=true&limit=8`)
-      .then(r => r.json())
-      .then((r: { data: ProductWithRelations[] }) => { setProducts(r.data); setLoading(false); })
+    getProducts({ featured: true, limit: 8 })
+      .then(r => { setProducts(r.data); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
 
