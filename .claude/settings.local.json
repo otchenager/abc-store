@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm typecheck *)",
+      "Bash(pnpm -r --if-present typecheck)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(pnpm --filter web add @vercel/analytics @vercel/speed-insights)",
+      "Bash(curl -s \"http://localhost:4000/api/products?page=1&limit=12\")",
+      "Bash(curl -s \"http://localhost:4000/api/products/filters\")",
+      "Bash(curl -s --compressed \"https://abc-store-eta.vercel.app/assets/index-DAGjanJG.js\")",
+      "Bash(python3 -c ' *)",
+      "Bash(railway whoami *)"
+    ]
+  }
+}

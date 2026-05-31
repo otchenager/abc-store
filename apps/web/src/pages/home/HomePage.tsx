@@ -183,7 +183,6 @@ function BrandStrip() {
 
 // ─── Featured Products ─────────────────────────────────────────────────────────
 function MiniCard({ product }: { product: ProductWithRelations }) {
-  console.log("MiniCard product:", product);
   const hasDiscount = product.oldPrice != null && product.oldPrice > product.price;
   const discount = hasDiscount ? Math.round(((product.oldPrice! - product.price) / product.oldPrice!) * 100) : null;
 
@@ -198,7 +197,7 @@ function MiniCard({ product }: { product: ProductWithRelations }) {
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-4px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 16px 48px rgba(99,102,241,0.15)"; }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.boxShadow = ""; }}
       >
-        <div style={{ background: "#f5f5f7", aspectRatio: "1/1", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, position: "relative" }}>
+        <div style={{ background: "#0d0d14", aspectRatio: "1/1", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, position: "relative" }}>
           {product.imageUrl
             ? <img src={product.imageUrl} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} loading="lazy" />
             : <span style={{ fontSize: 40, opacity: 0.3 }}>📦</span>
@@ -223,25 +222,11 @@ function FeaturedProducts() {
   const rowRef = useRef<HTMLDivElement>(null);
   useScrollReveal(products);
 
-  console.log("Products state:", products);
-  console.log("Loading state:", loading);
-
   useEffect(() => {
     getProducts({ featured: true, limit: 8 })
-      .then(r => {
-        console.log("Full response:", r);
-        console.log("r.data:", r.data);
-        console.log("r.products:", (r as any).products);
-        const products = r.data ?? (r as any).products ?? r;
-        console.log("Final products:", products);
-        setProducts(Array.isArray(products) ? products : []);
-        setLoading(false);
-      })
+      .then(r => { setProducts(r.data); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
-
-  console.log("Rendering products count:", products.length);
-  console.log("First product:", products[0]);
 
   return (
     <section style={{ padding: "clamp(40px,6vw,72px) clamp(16px,4vw,32px)", maxWidth: 1280, margin: "0 auto" }}>
