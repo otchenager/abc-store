@@ -292,7 +292,7 @@ const CATEGORIES = [
   { slug: "macbook",     name: "Ноутбуки",          desc: "MacBook Air и Pro 2025",         gradient: "135deg, #0d1b2a 0%, #1b2838 100%",  image: "/images/macbook.png" as string | null,  glowColor: "rgba(99,102,241,0.25)",  blend: "screen" as const, emoji: "💻" },
   { slug: "gaming",      name: "Консоли",           desc: "PlayStation 5, Xbox Series",     gradient: "135deg, #1a0a1a 0%, #2a1535 100%",  image: "/images/Sony PS5.png" as string | null, glowColor: "rgba(139,92,246,0.3)",   blend: "normal" as const, emoji: "🎮" },
   // Row 2 — бренды
-  { slug: "dji",         name: "DJI",               desc: "Камеры, микрофоны",       gradient: "135deg, #1a0a0a 0%, #2d1515 100%",  image: "/images/DJI_Mavic_4.png" as string | null, glowColor: "rgba(239,68,68,0.25)", blend: "normal" as const, emoji: "🚁" },
+  { slug: "dji",         name: "DJI",               desc: "Камеры, микрофоны",       gradient: "135deg, #1a0a0a 0%, #2d1515 100%",  image: "/images/djimic2.png" as string | null, glowColor: "rgba(239,68,68,0.25)", blend: "normal" as const, emoji: "🚁" },
   { slug: "rayban",      name: "Ray-Ban",            desc: "Умные очки с AI",                gradient: "135deg, #0a0f1a 0%, #151e2d 100%",  image: "/images/ray-ban.png" as string | null,  glowColor: "rgba(99,102,241,0.2)",   blend: "normal" as const, emoji: "🕶️" },
   { slug: "whoop",       name: "WHOOP",              desc: "Биометрика 24/7",                gradient: "135deg, #0a1a10 0%, #0d2d1a 100%",  image: "/images/whoop.png" as string | null,    glowColor: "rgba(34,197,94,0.25)",   blend: "normal" as const, emoji: "💚" },
   // Row 3 — остальные бренды
