@@ -31,8 +31,7 @@ const CATEGORY_RU: Record<string, string> = {
   vision: "VR / AR",
   gaming: "Консоли",
   // Бренды (нишевые)
-  dji: "DJI",
-  microphones: "Микрофоны",
+  microphones: "Микрофоны DJI",
   cameras: "Камеры DJI",
   rayban: "Ray-Ban",
   whoop: "WHOOP",

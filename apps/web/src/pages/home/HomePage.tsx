@@ -28,7 +28,7 @@ function CinematicHero() {
     { src: "/images/iphone17.png",        animClass: "float-a", local: true },
     { src: "/images/applewatchultra.png", animClass: "float-b", local: true },
     { src: "/images/DJI_Mavic_4.png",     animClass: "float-b", local: true },
-    { src: "/images/ray-ban.png",         animClass: "float-a", local: true },
+    { src: "/images/Sony PS5.png",         animClass: "float-a", local: true },
   ];
 
   return (
@@ -181,103 +181,118 @@ function BrandStrip() {
   );
 }
 
-// ─── Featured Products ─────────────────────────────────────────────────────────
-function MiniCard({ product }: { product: ProductWithRelations }) {
-  const hasDiscount = product.oldPrice != null && product.oldPrice > product.price;
-  const discount = hasDiscount ? Math.round(((product.oldPrice! - product.price) / product.oldPrice!) * 100) : null;
+  // ─── Featured Products ─────────────────────────────────────────────────────────
+  function MiniCard({ product }: { product: ProductWithRelations }) {
+    console.log("MiniCard product:", product);
+    const hasDiscount = product.oldPrice != null && product.oldPrice > product.price;
+    const discount = hasDiscount ? Math.round(((product.oldPrice! - product.price) / product.oldPrice!) * 100) : null;
 
-  return (
-    <Link to={`/product/${product.slug}`} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
-      <div style={{
-        background: "#13131a", border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 16, overflow: "hidden",
-        opacity: 1,
-        transition: "transform 0.2s, box-shadow 0.2s, opacity 0.3s ease",
-      }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-4px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 16px 48px rgba(99,102,241,0.15)"; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.boxShadow = ""; }}
-      >
-        <div style={{ background: "#0d0d14", aspectRatio: "1/1", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, position: "relative" }}>
-          {product.imageUrl
-            ? <img src={product.imageUrl} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} loading="lazy" />
-            : <span style={{ fontSize: 40, opacity: 0.3 }}>📦</span>
-          }
-          {discount && (
-            <span style={{ position: "absolute", top: 8, right: 8, background: "#ef4444", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 5 }}>-{discount}%</span>
-          )}
-        </div>
-        <div style={{ padding: "12px 14px 14px" }}>
-          <div style={{ fontSize: 10, color: "#6b6b80", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>{product.brand?.name ?? ""}</div>
-          <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3, marginBottom: 8, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{product.name}</div>
-          <div style={{ fontSize: 18, fontWeight: 800 }}>{formatRub(product.price)}</div>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-function FeaturedProducts() {
-  const [products, setProducts] = useState<ProductWithRelations[]>([]);
-  const [loading, setLoading] = useState(true);
-  const rowRef = useRef<HTMLDivElement>(null);
-  useScrollReveal(products);
-
-  useEffect(() => {
-    getProducts({ featured: true, limit: 8 })
-      .then(r => { setProducts(r.data); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, []);
-
-  return (
-    <section style={{ padding: "clamp(40px,6vw,72px) clamp(16px,4vw,32px)", maxWidth: 1280, margin: "0 auto" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32 }}>
-        <h2 style={{ margin: 0, fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em", fontFamily: "'DM Sans', sans-serif" }}>Хиты продаж</h2>
-        <Link to="/catalog?featured=true" style={{ fontSize: 14, color: "#6366f1", textDecoration: "none", fontWeight: 600 }}>Все товары →</Link>
-      </div>
-
-      <style>{`
-        .feat-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
-        @media (max-width:1024px) { .feat-row { grid-template-columns:repeat(3,1fr); } }
-        @media (max-width:768px)  { .feat-row { grid-template-columns:repeat(2,1fr); gap:12px; } }
-      `}</style>
-
-      {loading ? (
-        <div className="feat-row">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} style={{ borderRadius: 16, background: "#13131a", aspectRatio: "3/4", animation: "pulse 1.5s ease-in-out infinite" }} />
-          ))}
-        </div>
-      ) : (
-        <div className="feat-row" ref={rowRef}>
-          {products.map(p => <MiniCard key={p.id} product={p} />)}
-        </div>
-      )}
-
-      <div style={{ textAlign: "center", marginTop: 40 }}>
-        <Link to="/catalog" style={{
-          display: "inline-block", padding: "12px 32px", borderRadius: 12,
-          border: "1px solid rgba(255,255,255,0.12)", color: "#f0f0f5",
-          textDecoration: "none", fontSize: 14, fontWeight: 600,
-          transition: "border-color 0.2s, background 0.2s",
+    return (
+      <Link to={`/product/${product.slug}`} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
+        <div style={{
+          background: "#13131a", border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 16, overflow: "hidden",
+          opacity: 1,
+          transition: "transform 0.2s, box-shadow 0.2s, opacity 0.3s ease",
         }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "#6366f1"; (e.currentTarget as HTMLElement).style.background = "rgba(99,102,241,0.08)"; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.12)"; (e.currentTarget as HTMLElement).style.background = ""; }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-4px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 16px 48px rgba(99,102,241,0.15)"; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.boxShadow = ""; }}
         >
-          Смотреть весь каталог →
-        </Link>
-      </div>
-    </section>
-  );
-}
+          <div style={{background: "#f5f5f7", aspectRatio: "1/1", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, position: "relative" }}>
+            {product.imageUrl
+              ? <img src={product.imageUrl} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} loading="lazy" />
+              : <span style={{ fontSize: 40, opacity: 0.3 }}>📦</span>
+            }
+            {discount && (
+              <span style={{ position: "absolute", top: 8, right: 8, background: "#ef4444", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 5 }}>-{discount}%</span>
+            )}
+          </div>
+          <div style={{ padding: "12px 14px 14px" }}>
+            <div style={{ fontSize: 10, color: "#6b6b80", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>{product.brand?.name ?? ""}</div>
+            <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3, marginBottom: 8, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{product.name}</div>
+            <div style={{ fontSize: 18, fontWeight: 800 }}>{formatRub(product.price)}</div>
+          </div>
+        </div>
+      </Link>
+    );
+  }
+
+  function FeaturedProducts() {
+    const [products, setProducts] = useState<ProductWithRelations[]>([]);
+    const [loading, setLoading] = useState(true);
+    const rowRef = useRef<HTMLDivElement>(null);
+    useScrollReveal(products);
+
+    console.log("Products state:", products);
+    console.log("Loading state:", loading);
+
+    useEffect(() => {
+      getProducts({ featured: true, limit: 8 })
+        .then(r => {
+          console.log("Full response:", r);
+          console.log("r.data:", r.data);
+          console.log("r.products:", (r as any).products);
+          const products = r.data ?? (r as any).products ?? r;
+          console.log("Final products:", products);
+          setProducts(Array.isArray(products) ? products : []);
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
+    }, []);
+
+    console.log("Rendering products count:", products.length);
+    console.log("First product:", products[0]);
+
+    return (
+      <section style={{ padding: "clamp(40px,6vw,72px) clamp(16px,4vw,32px)", maxWidth: 1280, margin: "0 auto" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32 }}>
+          <h2 style={{ margin: 0, fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em", fontFamily: "'DM Sans', sans-serif" }}>Хиты продаж</h2>
+          <Link to="/catalog?featured=true" style={{ fontSize: 14, color: "#6366f1", textDecoration: "none", fontWeight: 600 }}>Все товары →</Link>
+        </div>
+
+        <style>{`
+          .feat-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+          @media (max-width:1024px) { .feat-row { grid-template-columns:repeat(3,1fr); } }
+          @media (max-width:768px)  { .feat-row { grid-template-columns:repeat(2,1fr); gap:12px; } }
+        `}</style>
+
+        {loading ? (
+          <div className="feat-row">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} style={{ borderRadius: 16, background: "#13131a", aspectRatio: "3/4", animation: "pulse 1.5s ease-in-out infinite" }} />
+            ))}
+          </div>
+        ) : (
+          <div className="feat-row" ref={rowRef}>
+            {products.map(p => <MiniCard key={p.id} product={p} />)}
+          </div>
+        )}
+
+        <div style={{ textAlign: "center", marginTop: 40 }}>
+          <Link to="/catalog" style={{
+            display: "inline-block", padding: "12px 32px", borderRadius: 12,
+            border: "1px solid rgba(255,255,255,0.12)", color: "#f0f0f5",
+            textDecoration: "none", fontSize: 14, fontWeight: 600,
+            transition: "border-color 0.2s, background 0.2s",
+          }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "#6366f1"; (e.currentTarget as HTMLElement).style.background = "rgba(99,102,241,0.08)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.12)"; (e.currentTarget as HTMLElement).style.background = ""; }}
+          >
+            Смотреть весь каталог →
+          </Link>
+        </div>
+      </section>
+    );
+  }
 
 // ─── Category Showcase ────────────────────────────────────────────────────────
 const CATEGORIES = [
   // Row 1 — категории
-  { slug: "iphone",      name: "Смартфоны",        desc: "iPhone 14–17, Samsung Galaxy",   gradient: "135deg, #1a1a2e 0%, #16213e 100%",  image: "/images/iphone17.png" as string | null, glowColor: "rgba(99,102,241,0.3)",   blend: "screen" as const, emoji: "📱" },
+  { slug: "iphone",      name: "Смартфоны",        desc: "iPhone 15–17, Samsung Galaxy",   gradient: "135deg, #1a1a2e 0%, #16213e 100%",  image: "/images/iphone17.png" as string | null, glowColor: "rgba(99,102,241,0.3)",   blend: "screen" as const, emoji: "📱" },
   { slug: "macbook",     name: "Ноутбуки",          desc: "MacBook Air и Pro 2025",         gradient: "135deg, #0d1b2a 0%, #1b2838 100%",  image: "/images/macbook.png" as string | null,  glowColor: "rgba(99,102,241,0.25)",  blend: "screen" as const, emoji: "💻" },
   { slug: "gaming",      name: "Консоли",           desc: "PlayStation 5, Xbox Series",     gradient: "135deg, #1a0a1a 0%, #2a1535 100%",  image: "/images/Sony PS5.png" as string | null, glowColor: "rgba(139,92,246,0.3)",   blend: "normal" as const, emoji: "🎮" },
   // Row 2 — бренды
-  { slug: "dji",         name: "DJI",               desc: "Дроны, камеры, микрофоны",       gradient: "135deg, #1a0a0a 0%, #2d1515 100%",  image: "/images/DJI_Mavic_4.png" as string | null, glowColor: "rgba(239,68,68,0.25)", blend: "normal" as const, emoji: "🚁" },
+  { slug: "dji",         name: "DJI",               desc: "Камеры, микрофоны",       gradient: "135deg, #1a0a0a 0%, #2d1515 100%",  image: "/images/DJI_Mavic_4.png" as string | null, glowColor: "rgba(239,68,68,0.25)", blend: "normal" as const, emoji: "🚁" },
   { slug: "rayban",      name: "Ray-Ban",            desc: "Умные очки с AI",                gradient: "135deg, #0a0f1a 0%, #151e2d 100%",  image: "/images/ray-ban.png" as string | null,  glowColor: "rgba(99,102,241,0.2)",   blend: "normal" as const, emoji: "🕶️" },
   { slug: "whoop",       name: "WHOOP",              desc: "Биометрика 24/7",                gradient: "135deg, #0a1a10 0%, #0d2d1a 100%",  image: "/images/whoop.png" as string | null,    glowColor: "rgba(34,197,94,0.25)",   blend: "normal" as const, emoji: "💚" },
   // Row 3 — остальные бренды
