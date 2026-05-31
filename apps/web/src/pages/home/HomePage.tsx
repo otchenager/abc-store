@@ -222,7 +222,15 @@ function FeaturedProducts() {
 
   useEffect(() => {
     getProducts({ featured: true, limit: 8 })
-      .then(r => { setProducts(r.data); setLoading(false); })
+      .then(r => {
+        console.log("Full response:", r);
+        console.log("r.data:", r.data);
+        console.log("r.products:", (r as any).products);
+        const products = r.data ?? (r as any).products ?? r;
+        console.log("Final products:", products);
+        setProducts(Array.isArray(products) ? products : []);
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
   }, []);
 
