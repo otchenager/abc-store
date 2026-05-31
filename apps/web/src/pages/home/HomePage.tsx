@@ -183,6 +183,7 @@ function BrandStrip() {
 
 // ─── Featured Products ─────────────────────────────────────────────────────────
 function MiniCard({ product }: { product: ProductWithRelations }) {
+  console.log("MiniCard product:", product);
   const hasDiscount = product.oldPrice != null && product.oldPrice > product.price;
   const discount = hasDiscount ? Math.round(((product.oldPrice! - product.price) / product.oldPrice!) * 100) : null;
 
