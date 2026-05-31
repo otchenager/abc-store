@@ -4,6 +4,7 @@ import { CartModal } from './CartModal'
 
 const LINKS = [
   { label: 'Каталог', to: '/catalog' },
+  { label: 'Услуги', to: '/services' },
   { label: 'Контакты', to: '/contacts' },
 ]
 

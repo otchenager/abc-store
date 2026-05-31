@@ -8,6 +8,7 @@ import { HomePage } from "../pages/home/HomePage";
 import { CatalogPage } from "../pages/CatalogPage";
 import { ContactsPage } from "../pages/ContactsPage";
 import { ProductPage } from "../pages/ProductPage";
+import { ServicesPage } from "../pages/ServicesPage";
 
 function ScrollToTop() {
   const { pathname, search } = useLocation();
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/catalog" element={<CatalogPage />} />
           <Route path="/product/:slug" element={<ProductPage />} />
+          <Route path="/services" element={<ServicesPage />} />
           <Route path="/contacts" element={<ContactsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
