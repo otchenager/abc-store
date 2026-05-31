@@ -220,6 +220,9 @@ function FeaturedProducts() {
   const [loading, setLoading] = useState(true);
   const rowRef = useRef<HTMLDivElement>(null);
 
+  console.log("Products state:", products);
+  console.log("Loading state:", loading);
+
   useEffect(() => {
     getProducts({ featured: true, limit: 8 })
       .then(r => {
