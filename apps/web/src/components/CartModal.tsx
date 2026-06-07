@@ -101,21 +101,23 @@ export function CartModal({ open, onClose }: CartModalProps) {
             top: auto; left: 0; right: 0; bottom: 0;
             width: 100%;
             max-height: 90vh;
-            overflow-y: auto;
+            overflow: hidden;
             padding: 0;
             border-left: none;
             border-top: 1px solid rgba(255,255,255,0.08);
             border-radius: 20px 20px 0 0;
           }
           .cart-item {
-            flex-direction: column;
-            align-items: flex-start;
+            align-items: center;
           }
           .cart-item-img {
-            width: 60px; height: 60px;
+            width: 56px; height: 56px;
           }
           .cart-item-info {
             font-size: 13px;
+          }
+          .cart-footer {
+            padding: 12px 16px;
           }
         }
       `}</style>
