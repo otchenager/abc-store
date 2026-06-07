@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import type { ProductWithRelations } from "../shared/api/product";
 
 interface CartItem {
@@ -38,7 +39,7 @@ export function CartModal({ open, onClose }: CartModalProps) {
     .map(i => `${i.product.name} ×${i.qty}`)
     .join(", ");
 
-  return (
+  return createPortal(
     <>
       <style>{`
         .cart-overlay {
@@ -183,6 +184,7 @@ export function CartModal({ open, onClose }: CartModalProps) {
           </div>
         )}
       </div>
-    </>
+    </>,
+    document.body
   );
 }
