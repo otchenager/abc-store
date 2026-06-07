@@ -613,7 +613,7 @@ export function CatalogPage() {
           .mobile-cats::-webkit-scrollbar { display:none; }
           .catalog-header { padding:0 16px !important; }
           .product-img-zone { height:160px !important; }
-          .catalog-content { padding-bottom: 88px; }
+          .catalog-content { padding-bottom: 88px !important; }
         }
         @media (min-width:769px) and (max-width:1100px) {
           .product-grid { grid-template-columns:repeat(3,1fr); }
